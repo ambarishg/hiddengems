@@ -1,0 +1,1061 @@
+---
+title: 'Why a Kernel is a Hidden Gem'
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 4.5
+    theme: cosmo
+    highlight: tango
+    code_folding: hide
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+knitr::opts_chunk$set(out.width="100%", fig.width = 10, split=FALSE, fig.align = 'default', fig.asp = 0.618)
+options(dplyr.summarise.inform = FALSE)
+```
+
+**Heads or Tails** has compiled a list of 300 kernels for a period of 100 weeks which he believes are **Hidden Gems** , Kernels which are Gems but they did not get their due recognition. Thanks to the wonderful effort, Heads or Tails for the Kaggle Community.                          
+
+
+We wanted  to find out what makes a Kernel a **Hidden Gem**. We looked at the **8** perspectives : Most Popular Gem Authors , Performance Tier of the Gem Authors , Total Votes , Total Comments , Total Views , Medals for the Gems , Maximum Version of the Kernel, Whether the Notebook is a Competition Notebook or not            
+
+
+We then did a Dimension Reduction of the Hidden Gems  to see which of the factors contribute the most in making a Kernel in the Hidden Gem. We found that the  **Total Votes , Total Comments , Total Views and Medal** contributes the most . The other factors which influenced a lot are **Whether the Notebook is a Competition Notebook or Not** and **Maximum Version Number ** of the Notebook    
+
+More than **85%** of the Hidden Gems are **Non Competition Notebooks**       
+
+Using these factors, we compiled a very **simple rules based recommender** for finding Hidden Gems for Notebooks created between 2021 June to 2021 December [  This is chosen to reduce the dataset analysis purposes only ]
+
+We choose the following criteria        
+
+* Medals -  Silver      
+
+* We chose a Kernel which is NOT a Competition Notebook 
+
+* Performance Tier of the author is Expert or Master    
+
+* We chose Kernels whose Total Votes greater than 40, Total Comments greater than 10 and the Number of views is more than 3100    
+
+* We removed Kernels which had common data sources such as Titanic, Breast Cancer , Heart and Diabetes   
+
+<hr/ >
+
+**Highest Votes after Hidden Gem declaration**         
+
+<hr/>
+
+Tutorial on reading large datasets, Dive into dplyr (tutorial #1), Writing Hamilton Lyrics with Tensorflow/R, Petfinder Pawpularity EDA & fastai starter , Recommendation engine with networkx got the highest votes after the Hidden Gem declaration   
+
+Police Policy and the Use of Deadly Force, CTDS - Subtitles exploration,	MOA Recipe,Advanced EDA: New Inferences from an old dataset, Leaf doctoR: EDA ,Evaluating defender ability to limit YAC , Do Left Handed Pitchers Make More Money?  got No Votes after Hidden Gem declaration       
+
+
+* Median Upvotes after Hidden Gem declaration is **9**     
+
+* Highest Upvotes after Hidden Gem declaration is **1152**   
+
+
+
+```{r,message=FALSE,warning=FALSE}
+library(gt)
+library(stringr)
+library(knitr)
+library(tidyverse)
+library(broom)
+library(vroom)
+library(ggplot2)
+
+```
+
+```{r,message=FALSE,warning=FALSE}
+
+rm(list=ls())
+
+fillColor = "#FFA07A"
+fillColor2 = "#F1C40F"
+
+gems = vroom("../input/notebooks-of-the-week-hidden-gems/kaggle_hidden_gems.csv")
+kernels = vroom("../input/meta-kaggle/Kernels.csv")
+users = vroom("../input/meta-kaggle/Users.csv")
+kernel_version_competition = vroom("../input/meta-kaggle/KernelVersionCompetitionSources.csv")
+kernel_versions = vroom("../input/meta-kaggle/KernelVersions.csv")
+kernel_tags = vroom("../input/meta-kaggle/KernelTags.csv")
+tags = vroom("../input/meta-kaggle/Tags.csv")
+kernel_votes = vroom("../input/meta-kaggle/KernelVotes.csv")
+
+gems =  gems %>% 
+  mutate(CurrentUrlSlug = str_remove(notebook, str_c("https://www.kaggle.com/", author_kaggle, "/")))
+
+gems_users = gems %>% 
+  left_join(users %>% select(AuthorUserId = Id, 
+                             author_kaggle = UserName,
+                             DisplayName,
+                             RegisterDate,
+                             PerformanceTier), by = "author_kaggle")
+
+kernels_gems <- gems_users %>% 
+  left_join(kernels ,  by = c("CurrentUrlSlug","AuthorUserId"))
+
+kernels_gems <- kernels_gems %>%
+  rename(KernelId = Id)
+
+kvcs <- kernels_gems %>%
+  left_join(kernel_version_competition ,  
+            by = c("CurrentKernelVersionId" = "KernelVersionId"))
+
+kernels_gems_tags <- inner_join(kernels_gems,kernel_tags)
+kernels_gems_tags <- inner_join(kernels_gems_tags,tags,by = c("TagId" = "Id"))
+
+```
+  
+
+
+# Most Popular Hidden Gems Authors
+
+**Jonathan Bouchet** has the highest number of gems ( **9**)     
+
+```{r,message=FALSE,warning=FALSE}
+
+gems %>%
+  group_by(author_name) %>%
+  summarise(Count = n()) %>%
+  filter(Count >=3) %>%
+  arrange(desc(Count)) %>%
+  ungroup() %>%
+  mutate(author_name = reorder(author_name,Count)) %>%
+ 
+  
+  ggplot(aes(x = author_name,y = Count)) +
+  geom_bar(stat='identity',colour="white", fill = fillColor2) +
+  geom_text(aes(x = author_name, y = 1, label = paste0("(",Count,")",sep="")),
+            hjust=0, vjust=.5, size = 4, colour = 'black',
+            fontface = 'bold') +
+  labs(x = 'author', 
+       y = 'Count', 
+       title = 'author and Count') +
+  coord_flip() + 
+  theme_bw()
+```
+
+## Jonathan Bouchet Notebooks -  Top Hidden Gem Author
+
+```{r,message=FALSE,warning=FALSE}
+
+jb_gems = gems %>%
+ filter(author_name == "Jonathan Bouchet") %>%
+  select(notebook,review)
+
+jb_gems %>%
+  gt() %>%
+  tab_header(
+    title = "Jonathan Bouchet Notebooks")
+
+```
+
+# Tags and Percentage        
+
+**Data Visualization** and **EDA** are the top most Tag contributors for the hidden gems         
+
+
+```{r,message=FALSE,warning=FALSE}
+
+TotalNoOfRows = nrow(kernels_gems_tags)
+p1 <- kernels_gems_tags %>%
+  group_by(Slug) %>%
+  summarise(Percentage = n()/TotalNoOfRows *100) %>%
+  arrange(desc(Percentage)) %>%
+  head(10) %>%
+  ungroup() %>%
+  mutate(Slug = reorder(Slug,Percentage))
+
+p1 %>%
+  filter(!is.na(Slug)) %>%
+  ggplot(aes(x = Slug,y = Percentage, fill = fillColor )) +
+  geom_bar(stat='identity',colour="white")  +
+  geom_text(aes(x = Slug, y = 1, 
+                label = paste0("( ",round(Percentage,2)," %)",sep="")),
+            hjust=0, vjust=.5, size = 4, colour = 'black',
+            fontface = 'bold') +
+  labs(x = 'Slug', 
+       y = 'Percentage', 
+       title = 'Tags and Percentage') +
+  guides(fill=guide_legend(title="Tags Percentage")) +
+  coord_flip() + 
+  theme_bw()
+
+```
+
+
+# Performance Tier and Gems   
+
+Experts [ **28%** ] followed by Masters [ **25%** ] contribute most of the Hidden Gems.Grand Masters [ **18%** ] and Contributors [ **18%** ] follow next. The Novice Tier and the Kaggle Team has also contributed to the Gems   
+
+```{r,message=FALSE,warning=FALSE}
+
+TotalNoOfRows <- nrow(gems_users)
+
+PerformanceTier <- c(NA,0,1,2,3,4,5)
+PerformanceTier_Name <- c("NoTier","Novice","Contributor","Expert","Master","GrandMaster","KaggleTeam")
+
+df_Performance_Tier <-data.frame(PerformanceTier, PerformanceTier_Name)
+
+gems_user_performance <- inner_join(gems_users,df_Performance_Tier)
+
+
+p1 <- gems_user_performance %>%
+  group_by(PerformanceTier_Name) %>%
+  summarise(Percentage = n()/TotalNoOfRows *100) %>%
+  arrange(desc(Percentage)) %>%
+  ungroup() %>%
+  mutate(PerformanceTier_Name = reorder(PerformanceTier_Name,Percentage))
+
+p1 %>%
+  filter(!is.na(PerformanceTier_Name)) %>%
+  ggplot(aes(x = PerformanceTier_Name,y = Percentage, fill = (PerformanceTier_Name) )) +
+  geom_bar(stat='identity',colour="white")  +
+  geom_label(aes(label = paste0("( ",round(Percentage,2)," %)",sep=""))) +
+  labs(x = 'Performance Tier', 
+       y = 'Percentage', 
+       title = 'Performance Tier and Percentage') +
+  coord_flip() + 
+  theme_bw() +
+  theme(legend.position = "none") 
+
+
+```
+
+
+# Hidden Gem and Competiton Notebook
+
+More than **85%** of the Hidden Gems are **Non Competition Notebooks** . 95% Confidence Interval for a Hidden Gem being a **NOT a Competition notebook** is between **80%** and **88%**      
+
+```{r,message=FALSE,warning=FALSE}
+
+comp_notebook = kvcs %>%
+  filter(!is.na(SourceCompetitionId))
+
+TotalNoOfRows = nrow(kvcs)
+
+comp_notebooks <- c(
+  (TotalNoOfRows - nrow(comp_notebook))/TotalNoOfRows *100,
+   nrow(comp_notebook)/TotalNoOfRows *100 )
+
+notebook_type <- c("NotCompetitionNotebook","CompetitionNotebook")
+
+df_comp_notebooks <-data.frame(notebook_type, comp_notebooks)
+
+
+comp_notebooks_colors <- c("NotCompetitionNotebook" = fillColor, 
+          "CompetitionNotebook" = fillColor2)
+
+
+ df_comp_notebooks %>%
+  arrange(desc(comp_notebooks))  %>%                                                  
+  ggplot(aes(x = notebook_type,y = comp_notebooks, fill = (notebook_type) )) +
+  geom_bar(stat='identity',colour="white") +
+  geom_label(aes(label = round(comp_notebooks,digits = 2))) +
+  labs(x = 'Notebook Type', 
+       y = 'Percentage', 
+       title = 'Notebook Type and Percentage') +
+  theme_bw() +
+  theme(legend.position = "none") 
+
+```
+
+## 95% Confidence Interval for a Hidden Gem being a **NOT A Competition notebook**
+
+      
+
+
+```{r,message=FALSE,warning=FALSE}
+
+prop.test(nrow(kvcs %>% filter(is.na(SourceCompetitionId))),nrow(kvcs),correct=FALSE)
+
+```
+
+
+# Total  Votes for a Hidden Gem{.tabset .tabset-fade .tabset-pills}       
+
+The following plot shows the distribution of Total  Votes for a Hidden Gem.      
+
+* Minimum number of votes is **1**         
+
+* Maximum number of votes is **1246**      
+
+* Median number of votes is **39**      
+
+95% Confidence Interval for a Hidden Gem Votes is between **44** and **65** 
+
+## Box Plot 
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs %>%
+  filter(!is.na(TotalVotes)) %>%
+      ggplot(aes(x = TotalVotes, fill = fillColor2)) +
+      geom_boxplot() + 
+      labs(x= ' [Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
+      theme_bw() +
+  theme(legend.position = "none") 
+                                                     
+
+```
+
+## Box Plot ( without Outliers )
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs %>%
+  filter(!is.na(TotalVotes)) %>%
+  filter( TotalVotes < 400) %>%
+      ggplot(aes(x = TotalVotes, fill = fillColor2)) +
+      geom_boxplot() + 
+      labs(x= ' [Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
+      theme_bw() +
+  theme(legend.position = "none") 
+                                                     
+
+```
+
+
+## Density Plot
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs %>%
+  filter(!is.na(TotalVotes)) %>%
+      ggplot(aes(x = TotalVotes, fill = fillColor2)) +
+      geom_density(fill = "orange", bw = 0.01) +
+      labs(x= ' [Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
+      theme_bw() +
+  theme(legend.position = "none") 
+                                                     
+
+```
+
+
+## Summary Statistics for Votes
+
+```{r,message=FALSE,warning=FALSE}
+
+summary(kvcs$TotalVotes)
+
+```
+
+## 95% Confidence Interval for Hidden Gems Votes
+
+     
+
+```{r,message=FALSE,warning=FALSE}
+
+# Calculate the mean and standard error
+l.model <- lm(TotalVotes ~ 1, kvcs)
+
+# Calculate the confidence interval
+confint(l.model, level=0.95)
+
+```
+
+# Total Comments{.tabset .tabset-fade .tabset-pills}       
+
+The following plot shows the distribution of Total  Comments for a Hidden Gem.         
+
+* Minimum number of Total Comments is **0**         
+
+* Maximum number of Total Comments is **103**      
+
+* Median number of Total Comments is **10**     
+
+95% Confidence Interval for a Hidden Gem Comments is between **12** and **15**      
+
+## Box Plot 
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs %>%
+  filter(!is.na(TotalComments)) %>%
+      ggplot(aes(x = TotalComments, fill = fillColor2)) +
+      geom_boxplot() + 
+      labs(x= ' [Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
+      theme_bw() +
+  theme(legend.position = "none") 
+                                                     
+
+```
+
+## Density Plot
+                                                     
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs %>%
+  filter(!is.na(TotalComments)) %>%
+      ggplot(aes(x = TotalComments)) +
+      geom_density(fill = "orange", bw = 0.01) +
+      labs(x= ' [TotalComments]',y = ' [Count]', title = paste("Distribution of", ' Total Comments ')) +
+  guides(fill=guide_legend(title="Total Comments Distribution")) +
+      theme_bw()
+
+```
+
+## Summary Statistics for Total Comments
+
+
+
+```{r,message=FALSE,warning=FALSE}
+
+summary(kvcs$TotalComments)
+
+```
+
+## 95% Confidence Interval for Hidden Gems Total Comments
+
+
+
+
+```{r,message=FALSE,warning=FALSE}
+
+# Calculate the mean and standard error
+l.model <- lm(TotalComments ~ 1, kvcs)
+
+# Calculate the confidence interval
+confint(l.model, level=0.95)
+
+```
+
+
+# Total Views{.tabset .tabset-fade .tabset-pills}  
+
+The following plot shows the distribution of Total  Views for a Hidden Gem          
+
+* Minimum number of Total Views is **228**         
+
+* Maximum number of Total Views is **182641**      
+
+* Median number of Total Views is **3098**      
+
+95% Confidence Interval for a Hidden Gem Views is between **4583** and **7808**             
+
+## Box Plot 
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs %>%
+  filter(!is.na(TotalViews)) %>%
+      ggplot(aes(x = TotalViews, fill = fillColor2)) +
+      geom_boxplot() + 
+      labs(x= ' [Total TotalViews]',y = ' [Count]', title = paste("Distribution of", ' Total TotalViews ')) +
+      theme_bw() +
+  theme(legend.position = "none") 
+                                                     
+
+```
+
+## Density Plot
+                                                     
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs %>%
+  filter(!is.na(TotalViews)) %>%
+      ggplot(aes(x = TotalViews)) +
+      geom_density(fill = "orange", bw = 0.01) +
+      labs(x= ' [TotalViews]',y = ' [Count]', title = paste("Distribution of", ' Total TotalViews ')) +
+  guides(fill=guide_legend(title="Total TotalViews Distribution")) +
+      theme_bw()
+
+```
+
+## Histogram  Plot
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs %>%
+  filter(!is.na(TotalViews)) %>%
+      ggplot(aes(x = TotalViews, fill = fillColor2)) +
+      geom_histogram() +
+      scale_x_log10() +
+      scale_y_log10() + 
+      labs(x= 'Log [TotalViews]',y = 'Log [Count]', title = paste("Distribution of", ' Total Views ')) +
+  guides(fill=guide_legend(title="Total Views Distribution")) +
+      theme_bw()
+
+```
+
+## Summary Statistics for Total Views
+
+
+
+```{r,message=FALSE,warning=FALSE}
+
+summary(kvcs$TotalViews)
+
+```
+
+## 95% Confidence Interval for Hidden Gems Total Views
+
+
+
+```{r,message=FALSE,warning=FALSE}
+
+# Calculate the mean and standard error
+l.model <- lm(TotalViews ~ 1, kvcs)
+
+# Calculate the confidence interval
+confint(l.model, level=0.95)
+
+```
+
+
+# Medal distribution
+
+The Hidden Gems are distributed with Silver Medals ( 43% ) , Gold ( 33% ), Bronze ( 17% ) and No Medals ( 5%) 
+
+```{r,message=FALSE,warning=FALSE}
+
+#2 - Silver
+#1 - Gold
+#3 - Bronze
+
+Medal <- c(NA,1,2,3)
+Medal_Name <- c("NoMedal","Bronze","Silver","Gold")
+
+medal_colors <- c("NoMedal" = fillColor, 
+          "Bronze" = fillColor2, 
+          "Silver" = fillColor2, 
+          "Gold" = fillColor2)
+
+df_Medals <-data.frame(Medal, Medal_Name)
+
+
+kvcs <- left_join(kvcs,df_Medals)
+TotalNoOfRows <- nrow(kvcs)
+
+p1 <- kvcs %>%
+  group_by(Medal_Name) %>%
+  summarise(Percentage = n()/TotalNoOfRows *100) %>%
+  arrange(desc(Percentage)) %>%
+  ungroup() %>%
+  mutate(Medal_Name = reorder(Medal_Name,Percentage))
+
+ 
+ 
+ p1 %>%
+  ggplot(aes(x = Medal_Name,y = Percentage, fill = factor(Medal_Name) )) +
+  geom_bar(stat='identity',colour="white") +
+  scale_fill_manual(values = medal_colors) + 
+  geom_text(aes(x = Medal_Name, y = 1, 
+                label = paste0("( ",round(Percentage,2)," %)",sep="")),
+            hjust=0, vjust=.5, size = 4, colour = 'black',
+            fontface = 'bold') +
+  labs(x = 'Medal', 
+       y = 'Percentage', 
+       title = 'Medal and Percentage') +
+  coord_flip() + 
+  guides(fill=guide_legend(title="Medal Distribution")) +
+  theme_bw()
+
+
+```
+
+
+# Versions of the Hidden Gems{.tabset .tabset-fade .tabset-pills} 
+
+We investigate the number of versions of a Hidden Gem and the following plot shows the distribution of the maximum version of a Hidden Gem. 
+
+
+* Minimum number of Maximum Version Number is **1**         
+
+* Maximum number of Maximum Version Number is **362**      
+
+* Median number of Maximum Version Number is **11**     
+
+
+95% Confidence Interval for a Hidden Gem Maximum Version Number is between **16** and **24**    
+
+
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs_versions = left_join(kvcs,kernel_versions,by = c("KernelId" = "ScriptId"))
+
+kvcs_versions_max_df = kvcs_versions %>%
+  group_by(KernelId) %>%
+  summarise(MaxVersionNumber = max(VersionNumber,na.rm = TRUE))
+
+
+kvcs_versions_info = left_join(kvcs,kvcs_versions_max_df)
+
+kvcs_versions_info = kvcs_versions_info %>%
+  filter(MaxVersionNumber > 0)
+
+```
+
+## Box Plot 
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs_versions_info %>%
+  filter(!is.na(MaxVersionNumber)) %>%
+      ggplot(aes(x = MaxVersionNumber, fill = fillColor2)) +
+      geom_boxplot() + 
+      labs(x= ' [MaxVersionNumber]',y = ' [Count]', title = paste("Distribution of", ' MaxVersionNumber ')) +
+      theme_bw() +
+  theme(legend.position = "none") 
+                                                     
+
+```
+
+## Density Plot
+                                                     
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs_versions_info %>%
+  filter(!is.na(MaxVersionNumber)) %>%
+      ggplot(aes(x = MaxVersionNumber)) +
+      geom_density(fill = "orange", bw = 0.01) +
+      labs(x= ' [MaxVersionNumber]',y = ' [Count]', title = paste("Distribution of", ' MaxVersionNumber ')) +
+  guides(fill=guide_legend(title="MaxVersionNumber Distribution")) +
+      theme_bw()
+
+```
+
+
+
+
+## Histogram  Plot
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs_versions_info %>%
+  filter(!is.na(MaxVersionNumber)) %>%
+      ggplot(aes(x = MaxVersionNumber, fill = fillColor2)) +
+      geom_histogram() +
+      labs(x= 'Maximum Version Number',y = 'Count', title = paste("Distribution of", ' Maximum Version Number ')) +
+      theme_bw()
+
+
+```
+
+
+## Summary Statistics for Maximum Version Number
+
+
+```{r,message=FALSE,warning=FALSE}
+
+kvcs_versions_info = kvcs_versions_info %>%
+  filter(MaxVersionNumber > 0)
+
+summary(kvcs_versions_info$MaxVersionNumber)
+
+```
+
+## 95% Confidence Interval for Hidden Gems Maximum Version Number
+     
+
+```{r,message=FALSE,warning=FALSE}
+
+# Calculate the mean and standard error
+l.model <- lm(MaxVersionNumber ~ 1, kvcs_versions_info)
+
+# Calculate the confidence interval
+confint(l.model, level=0.95)
+
+```
+
+
+# Principal Components{.tabset .tabset-fade .tabset-pills}    
+
+We did a PCA on the dataset involving Total Votes , Total Views , Total Comments , Medal and whether it is a Competition Notebook or not.    
+
+The **1st , 2nd  Principal Components** explain more than **50%** of the information
+
+
+
+```{r}
+
+kvcs_versions_info = kvcs_versions_info %>%
+  mutate(CompNoteBook = ifelse(is.na(SourceCompetitionId),0,1))
+
+kvcs_reduced = kvcs_versions_info %>%
+  select("TotalViews","TotalComments","TotalVotes","CompNoteBook","Medal", "MaxVersionNumber","PerformanceTier")
+
+
+kvcs_reduced[is.na(kvcs_reduced)] <- 0 
+
+kvcsPCA <- prcomp(kvcs_reduced, center = TRUE,scale. = TRUE)
+
+std_dev <- kvcsPCA$sdev
+
+pr_var <- std_dev^2
+
+prop_varex <- pr_var/sum(pr_var)
+
+summary(kvcsPCA) 
+
+plot(cumsum(prop_varex), xlab = "Principal Component",
+     ylab = "Cumulative Proportion of Variance Explained",
+     type = "b")
+
+```
+
+
+* For the First Principal Component , **Total Votes , Total Comments , Total Views and Medal** contributes the most . The first Principal Component explains 34% of the information          
+
+* For the Second Principal Component , **Performance Tier, Total Views and Whether the Notebook is a Competition Notebook or not** contributes the most        
+
+
+## Principal Component 1 
+
+     
+
+
+```{r,message=FALSE,warning=FALSE}
+
+showPC <- function(PCNumber) {
+  kvcsPCA %>%
+    tidy(matrix = "rotation") %>%
+    filter(PC == PCNumber) %>%
+    arrange(desc(abs(value))) %>%
+    mutate(column = reorder(column,abs(value))) %>%
+    ggplot(aes(x = column,y = abs(value), fill = factor(column))) +
+    geom_bar(stat='identity',colour="white") +
+    labs(x = 'Column', 
+         y = 'Value', 
+         title = 'Column and Value') +
+    coord_flip() + 
+    guides(fill=guide_legend(title="Principal Components")) +
+    theme_bw()
+}
+
+showPC(1)
+
+```
+
+## Principal Component 2 
+
+```{r,message=FALSE,warning=FALSE}
+showPC(2)
+```
+
+
+## Principal Component 3 
+
+```{r,message=FALSE,warning=FALSE}
+showPC(3)
+```
+
+
+## Principal Component 4 
+
+```{r,message=FALSE,warning=FALSE}
+showPC(4)
+```
+
+## Principal Component 5 
+
+```{r,message=FALSE,warning=FALSE}
+showPC(5)
+```
+
+## Principal Component 6 
+
+```{r,message=FALSE,warning=FALSE}
+showPC(6)
+```
+
+## Principal Component 7 
+
+```{r,message=FALSE,warning=FALSE}
+showPC(7)
+```
+
+# Recommended Notebooks for 2021 June to 2021 December         
+We recommend the following Notebooks created between 2021 June to 2021 December [  This is chosen to reduce the dataset analysis purposes only ]
+
+We choose the following criteria        
+
+* Medals -  Silver      
+
+* We chose a Kernel which is NOT a Competition Notebook 
+
+* Performance Tier of the author is Expert or Master    
+
+* We chose Kernels whose Total Votes greater than 40, Total Comments greater than 10 and the Number of views is more than 3100    
+
+* We removed Kernels which had common data sources such as Titanic, Breast Cancer , Heart and Diabetes    
+
+
+
+```{r,message=FALSE,warning=FALSE}
+
+kernels$MadePublicDate = as.Date(kernels$MadePublicDate,format = "%m/%d/%Y")
+
+kernels_subset = kernels %>% 
+  filter(between(MadePublicDate, as.Date("2021-06-01"),as.Date("2021-12-31")))
+
+kernels_subset = kernels_subset %>%
+  filter(TotalVotes > 40)
+
+kernels_subset = kernels_subset %>%
+  filter(TotalComments > 10)
+
+kernels_subset = kernels_subset %>%
+  filter(TotalViews > 3100)
+
+kernels_subset$Medal = as.integer(kernels_subset$Medal)
+
+kernels_subset_silver = kernels_subset %>%
+  filter(Medal >= 2)
+
+kvcs_silver <- kernels_subset_silver %>%
+  left_join(kernel_version_competition ,  
+            by = c("CurrentKernelVersionId" = "KernelVersionId"))
+
+kvcs_silver = kvcs_silver %>%
+  filter(is.na(SourceCompetitionId))
+
+kvcs_silver = kvcs_silver %>%
+  mutate(CompNoteBook = ifelse(is.na(SourceCompetitionId),0,1))
+
+kvcs_silver_users = kvcs_silver %>% 
+  left_join(users %>% select(AuthorUserId = Id, 
+                             author_kaggle = UserName,
+                             DisplayName,
+                             RegisterDate,
+                             PerformanceTier), by = "AuthorUserId")
+
+kvcs_silver_users_experts = kvcs_silver_users %>%
+  filter(PerformanceTier %in%  c(2,3))
+
+kvcs_silver_users_experts = kvcs_silver_users_experts %>%
+  filter(!str_detect(CurrentUrlSlug, c("titanic") ))
+
+kvcs_silver_users_experts = kvcs_silver_users_experts %>%
+  filter(!str_detect(CurrentUrlSlug, c("diabetes") ))
+
+kvcs_silver_users_experts = kvcs_silver_users_experts %>%
+  filter(!str_detect(CurrentUrlSlug, c("house") ))
+
+kvcs_silver_users_experts = kvcs_silver_users_experts %>%
+  filter(!str_detect(CurrentUrlSlug, c("heart") ))
+
+kvcs_silver_users_experts = kvcs_silver_users_experts %>%
+  filter(!str_detect(CurrentUrlSlug, c("breast") ))
+
+
+kvcs_silver_users_experts = kvcs_silver_users_experts %>%
+  mutate( URL = paste("https://www.kaggle.com/code/",author_kaggle,"/",CurrentUrlSlug,sep =""))
+
+kvcs_versions_info_reduced = kvcs_silver_users_experts %>%
+  select("URL","Medal",
+         "TotalViews","TotalComments","TotalVotes",
+  ) %>%
+  arrange(desc(TotalVotes))
+
+
+
+kvcs_versions_info_reduced %>%
+  gt() %>%
+  tab_header(
+    title = "Recommended Notebooks for 2021 June to December")
+
+```
+
+
+# Who got Highest Votes after Hidden Gem Declaration
+
+The notebooks which got the highest votes after the Hidden Gem declaration are shown below  
+
+Tutorial on reading large datasets, Dive into dplyr (tutorial #1), Writing Hamilton Lyrics with Tensorflow/R, Petfinder Pawpularity EDA & fastai starter , Recommendation engine with networkx got the highest votes after the Hidden Gem declaration        
+
+
+
+```{r,message=FALSE,warning=FALSE}
+
+kernels_gems_versions = left_join(kernels_gems,kernel_versions,by = c("KernelId" = "ScriptId"))
+
+
+kernels_gems_versions = kernels_gems_versions %>%
+  rename(KernelVersionId = Id)
+
+kernel_gems_votes = left_join(kernels_gems_versions,kernel_votes)
+
+kernel_gems_votes$VoteDate = as.Date(kernel_gems_votes$VoteDate,format = "%m/%d/%Y")
+kernel_gems_votes$date = as.Date(kernel_gems_votes$date,format = "%m/%d/%Y")
+
+kernel_gems_votes %>%
+  filter(VoteDate > date) %>%
+  group_by(CurrentUrlSlug) %>%
+  summarise(Count = n()) %>%
+  arrange(desc(Count)) %>%
+  head(15) %>%
+  ungroup() %>%
+  mutate(CurrentUrlSlug = reorder(CurrentUrlSlug,Count)) %>%
+  
+  ggplot(aes(x = CurrentUrlSlug,y = Count)) +
+  geom_bar(stat='identity',colour="white", fill = fillColor2) +
+  geom_text(aes(x = CurrentUrlSlug, y = 1, label = paste0("(",Count,")",sep="")),
+            hjust=0, vjust=.5, size = 4, colour = 'black',
+            fontface = 'bold') +
+  labs(x = 'Notebook', 
+       y = 'Count', 
+       title = 'Notebook and Count') +
+  coord_flip() + 
+  theme_bw()
+  
+  
+  s = 
+  kernel_gems_votes %>%
+  filter(VoteDate > date) %>%
+  group_by(CurrentUrlSlug) %>%
+  summarise(Count = n())
+
+s = left_join(gems,s)
+
+a = s %>%
+  arrange(desc(Count)) %>%
+  head(15) %>%
+  select(notebook,title,review)
+  
+  a %>%
+  gt() %>%
+  tab_header(
+    title = "Highest Votes after the Hidden Gem Declaration")
+
+```
+
+# Who got No Votes after the Hidden Gem Declaration    
+
+The notebooks which got No votes after the Hidden Gem declaration are shown below    
+
+Police Policy and the Use of Deadly Force, CTDS - Subtitles exploration,	MOA Recipe,Advanced EDA: New Inferences from an old dataset, Leaf doctoR: EDA ,Evaluating defender ability to limit YAC , Do Left Handed Pitchers Make More Money?  got No Votes after Hidden Gem declaration           
+
+
+```{r,message=FALSE,warning=FALSE}
+
+
+a = s %>%
+  filter(is.na(Count)) %>%
+  select(notebook,title,review)
+
+a %>%
+  gt() %>%
+  tab_header(
+    title = "No Votes after the Hidden Gem Declaration")
+
+
+```
+
+
+# Lowest Number of Votes after Hidden Gem Declaration
+
+The notebooks which got the lowest votes after the Hidden Gem declaration are shown below      
+
+```{r,message=FALSE,warning=FALSE}
+
+ kernel_gems_votes %>%
+  filter(VoteDate > date) %>%
+  group_by(CurrentUrlSlug) %>%
+  summarise(Count = n()) %>%
+  arrange((Count)) %>%
+  head(15) %>%
+  ungroup() %>%
+  mutate(CurrentUrlSlug = reorder(CurrentUrlSlug,Count))  %>%
+  
+  ggplot(aes(x = CurrentUrlSlug,y = Count)) +
+  geom_bar(stat='identity',colour="white", fill = fillColor2) +
+  geom_text(aes(x = CurrentUrlSlug, y = 1, label = paste0("(",Count,")",sep="")),
+            hjust=0, vjust=.5, size = 4, colour = 'black',
+            fontface = 'bold') +
+  labs(x = 'CurrentUrlSlug', 
+       y = 'Count', 
+       title = 'CurrentUrlSlug and Count') +
+  coord_flip() + 
+  theme_bw()
+ 
+  a = s %>%
+  arrange((Count)) %>%
+  head(15) %>%
+  select(notebook,title,review)
+  
+  a %>%
+  gt() %>%
+  tab_header(
+    title = "Lowest Votes after the Hidden Gem Declaration")
+
+```
+
+# More Analysis UpVotes after Hidden Gem declaration{.tabset .tabset-fade .tabset-pills}       
+
+* Median Upvotes after Hidden Gem declaration is **9**     
+
+* Highest Upvotes after Hidden Gem declaration is **1152**     
+
+
+## Box Plot [ removing Outliers]
+
+```{r,message=FALSE,warning=FALSE}
+
+s %>%
+  filter(!is.na(Count)) %>%
+  filter( Count < 100) %>%
+      ggplot(aes(x = Count, fill = fillColor2)) +
+      geom_boxplot() + 
+      labs(x= ' [UpVotes]',y = ' [Count]', title = paste("Distribution of", ' UpVotes ')) +
+      theme_bw() +
+  theme(legend.position = "none") 
+                                                     
+
+```
+
+
+## Density Plot
+
+```{r,message=FALSE,warning=FALSE}
+
+s %>%
+  filter(!is.na(Count)) %>%
+      ggplot(aes(x = Count, fill = fillColor2)) +
+      geom_density(fill = "orange", bw = 0.01) +
+      labs(x= ' [Up Votes]',y = ' [Count]', title = paste("Distribution of", ' Up Votes ')) +
+      theme_bw() +
+  theme(legend.position = "none") 
+                                                     
+
+```
+
+
+## Summary Statistics for Hidden Gems UpVotes      
+
+Median Hidden Gem Up votes is **9** , and the Maximum Up votes received is 1152      
+
+
+```{r,message=FALSE,warning=FALSE}
+
+summary(s$Count)
+
+```
+
+## 95% Confidence Interval for Hidden Gems UpVotes
+
+95% Confidence Interval for a Hidden Gem Up Votes  is between **15** and **35**   
+
+```{r,message=FALSE,warning=FALSE}
+
+# Calculate the mean and standard error
+l.model <- lm(Count ~ 1, s)
+
+# Calculate the confidence interval
+confint(l.model, level=0.95)
+
+```
+                                                     
+
+                                                     
+                                                     
