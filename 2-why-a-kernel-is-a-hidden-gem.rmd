@@ -1004,7 +1004,7 @@ The notebooks which got the lowest votes after the Hidden Gem declaration are sh
 
 s %>%
   filter(!is.na(Count)) %>%
-  filter( Count < 100) %>%
+  filter( Count < 50) %>%
       ggplot(aes(x = Count, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [UpVotes]',y = ' [Count]', title = paste("Distribution of", ' UpVotes ')) +
@@ -1021,6 +1021,7 @@ s %>%
 
 s %>%
   filter(!is.na(Count)) %>%
+  filter(Count < 50) %>%
       ggplot(aes(x = Count, fill = fillColor2)) +
       geom_density(fill = "orange", bw = 0.01) +
       labs(x= ' [Up Votes]',y = ' [Count]', title = paste("Distribution of", ' Up Votes ')) +
