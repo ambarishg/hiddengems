@@ -45,7 +45,7 @@ We choose the following criteria
 
 <hr/ >
 
-**Votes after Hidden Gem declaration**         
+**Highest Votes after Hidden Gem declaration**         
 
 <hr/>
 
@@ -68,7 +68,11 @@ library(tidyverse)
 library(broom)
 library(vroom)
 library(ggplot2)
-
+library(widyr)
+library(igraph)
+library(ggraph)
+library(tidytext)
+                                                     
 ```
 
 ```{r,message=FALSE,warning=FALSE}
@@ -1004,7 +1008,7 @@ The notebooks which got the lowest votes after the Hidden Gem declaration are sh
 
 s %>%
   filter(!is.na(Count)) %>%
-  filter( Count < 50) %>%
+  filter( Count < 100) %>%
       ggplot(aes(x = Count, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [UpVotes]',y = ' [Count]', title = paste("Distribution of", ' UpVotes ')) +
@@ -1021,7 +1025,6 @@ s %>%
 
 s %>%
   filter(!is.na(Count)) %>%
-  filter(Count < 50) %>%
       ggplot(aes(x = Count, fill = fillColor2)) +
       geom_density(fill = "orange", bw = 0.01) +
       labs(x= ' [Up Votes]',y = ' [Count]', title = paste("Distribution of", ' Up Votes ')) +
@@ -1057,75 +1060,114 @@ confint(l.model, level=0.95)
 
 ```
                                                      
-# KMeans               
+# Mining Hidden Gems Titles and Reviews      
 
-```{r,message = FALSE, warning = FALSE}
 
-# function to compute total within-cluster sum of square 
-wss <- function(k) {
-  kmeans(scale(kvcs_reduced), k, nstart = 10 )$tot.withinss
-}
+## Network graph of Hidden Gem Title          
 
-# Compute and plot wss for k = 1 to k = 10
-k.values <- 1:15
 
-# extract wss for 2-15 clusters
-wss_values <- map_dbl(k.values, wss)
+```{r,message=FALSE,warning=FALSE}
 
-plot(k.values, wss_values,
-     type="b", pch = 19, frame = FALSE, 
-     xlab="Number of clusters K",
-     ylab="Total within-clusters sum of squares")
-kvcs_reduced = as.data.frame(scale(kvcs_reduced))
+gem_title <- gems %>% 
+  select(notebook,title)  %>% 
+  unnest_tokens(word, title) %>% 
+  anti_join(stop_words)
 
-set.seed(20)
-clusters <- kmeans(kvcs_reduced, 4)
+gem_review <- gems %>% 
+  select(notebook,review) %>%
+  unnest_tokens(word, review) %>% 
+  anti_join(stop_words)
 
-kvcs_reduced$clusterNumber <- clusters$cluster
 
-showCluster <- function(clusterNo) {
-  
-  cluster <- kvcs_reduced %>%
-    filter(clusterNumber ==  clusterNo)
-  
-  sort(colSums(cluster),decreasing = TRUE)%>%
-    as.data.frame() %>%
-    rownames_to_column() %>%
-    filter(rowname != "clusterNumber") %>%
-    head(4) %>%
-    select(rowname) %>%
-    kable()
-  
-}
+title_word_pairs <- gem_title %>% 
+  pairwise_count(word, notebook, sort = TRUE, upper = FALSE)
 
-plotCluster <- function(clusterNo) {
-  
-  cluster <- kvcs_reduced %>%
-    filter(clusterNumber ==  clusterNo)
-  
-  sort(colSums(cluster),decreasing = TRUE)%>%
-    as.data.frame() %>%
-    rownames_to_column() %>%
-    filter(rowname != "clusterNumber") %>%
-    mutate(rowname = reorder(rowname,.)) %>%
-    
-    
-    ggplot(aes(x = rowname,y = .,label = rowname, fill = rowname)) +
-    geom_col(alpha = 0.9, show.legend = FALSE) +
-    geom_text(aes(rowname, 0.001), hjust=0, vjust=.5, size = 4, colour = 'black') +
-    labs(x = NULL, 
-         y = 'Cumulative Value') +
-    coord_flip() + 
-    theme(axis.text.y=element_blank()) 
-}
 
-showCluster(1)
-plotCluster(1)
-plotCluster(2)
-plotCluster(3)
-                                                     
+review_word_pairs <- gem_review %>% 
+  pairwise_count(word, notebook, sort = TRUE, upper = FALSE) %>%
+  filter( item1 != "www.kaggle.com") %>%
+  filter( item2 != "www.kaggle.com") %>%
+  filter( item1 != "https")
+
+
+set.seed(1234)
+title_word_pairs %>%
+  filter(n >= 4) %>%
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "cyan4") +
+  geom_node_point(size = 5) +
+  geom_node_text(aes(label = name), repel = TRUE, 
+                 point.padding = unit(0.2, "lines")) +
+  theme_void()
+
+
 ```
-                                                     
 
+## Network graph of Hidden Gem Reviews     
+
+
+```{r,message=FALSE,warning=FALSE}
+
+set.seed(1234)
+review_word_pairs %>%
+  filter(n >= 10) %>%
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "darkred") +
+  geom_node_point(size = 5) +
+  geom_node_text(aes(label = name), repel = TRUE,
+                 point.padding = unit(0.2, "lines")) +
+  theme_void()
+
+```
+
+## Topic Modelling of Hidden Gem Reviews             
+
+
+
+```{r,message = FALSE,warning=FALSE}
+my_stop_words <- bind_rows(stop_words, 
+                           tibble(word = c("kaggle", "survey", "https", "2021",
+                                           "2020","www.kaggle.com")))
+
+word_counts <- gem_review %>%
+ anti_join(my_stop_words) %>%
+  count(notebook, word, sort = TRUE) %>%
+  ungroup()
+
+desc_dtm <- word_counts %>%
+  cast_dtm(notebook, word, n)
+
+library(topicmodels)
+
+# be aware that running this model is time intensive
+desc_lda <- LDA(desc_dtm, k = 8, control = list(seed = 1234))
+desc_lda
+
+
+tidy_lda <- tidy(desc_lda)
+
+tidy_lda
+
+top_terms <- tidy_lda %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 10, with_ties = FALSE) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+top_terms %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  group_by(topic, term) %>%    
+  arrange(desc(beta)) %>%  
+  ungroup() %>%
+  ggplot(aes(beta, term, fill = as.factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  scale_y_reordered() +
+  labs(title = "Top 10 terms in each LDA topic",
+       x = expression(beta), y = NULL) +
+  facet_wrap(~ topic, ncol = 4, scales = "free")
+
+```
                                                      
                                                      
