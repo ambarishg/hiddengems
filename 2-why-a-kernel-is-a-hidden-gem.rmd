@@ -41,7 +41,24 @@ We choose the following criteria
 
 * We chose Kernels whose Total Votes greater than 40, Total Comments greater than 10 and the Number of views is more than 3100    
 
-* We removed Kernels which had common data sources such as Titanic, Breast Cancer , Heart and Diabetes   
+* We removed Kernels which had common data sources such as Titanic, Breast Cancer , Heart and Diabetes       
+
+
+<hr/ >
+
+**Text Mining the Hidden Gem Titles and Hidden Gem Reviews**         
+
+<hr/>
+
+In our quest to find out what makes a Hidden Gem , we dived deeper into a Hidden Gem  Title and a Hidden Gem Review     
+
+We found that Hidden Gem Titles with **2 most commonly occurring words** include **data analysis** , **data science** and **time series** .        
+
+We also found that Hidden Gem Reviews with **2 most commonly occurring words** include **data visuals** , **visuals analysis** , **detailed exploration** , **kaggle survey** , **exploratory analysis**   
+
+We also wanted to find out topics which are interesting for Hidden Gems. Most prominent topics include  **detailed exploration** ,  **competition** ,  **data analysis** , and  **data visuals**          
+
+Mining the Hidden Gem Titles and Reviews it seems that notebooks with **detailed exploratory data analysis catches the eye of the Hidden Gem Creator**
 
 <hr/ >
 
@@ -72,7 +89,7 @@ library(widyr)
 library(igraph)
 library(ggraph)
 library(tidytext)
-                                                     
+
 ```
 
 ```{r,message=FALSE,warning=FALSE}
@@ -1065,6 +1082,8 @@ confint(l.model, level=0.95)
 
 ## Network graph of Hidden Gem Title          
 
+Hidden Gem Titles with **2 most commonly occurring words** include **data analysis** , **data science** and **time series** . The following network graph depicts the two words in the Hidden Gem title **which occurs the most**                       
+
 
 ```{r,message=FALSE,warning=FALSE}
 
@@ -1106,6 +1125,7 @@ title_word_pairs %>%
 
 ## Network graph of Hidden Gem Reviews     
 
+Hidden Gem Reviews with **2 most commonly occurring words** include **data visuals** , **visuals analysis** , **detailed exploration** , **kaggle survey** , **exploratory analysis**  The following network graph depicts the two words in the Hidden Gem reviews which occurs the most             
 
 ```{r,message=FALSE,warning=FALSE}
 
@@ -1123,6 +1143,9 @@ review_word_pairs %>%
 ```
 
 ## Topic Modelling of Hidden Gem Reviews             
+
+We did a Topic modelling of the Hidden Gem Reviews and we have chosen 10 topics. The topic 1 as we see is associated with **detailed exploration** , topic 2 is associated with **competition** , topic 3 is associated with **data analysis** , topic 4 is associated with **data visuals**       
+
 
 
 
@@ -1147,8 +1170,6 @@ desc_lda
 
 
 tidy_lda <- tidy(desc_lda)
-
-tidy_lda
 
 top_terms <- tidy_lda %>%
   group_by(topic) %>%
