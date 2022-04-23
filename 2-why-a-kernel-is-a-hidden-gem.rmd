@@ -50,7 +50,7 @@ We choose the following criteria
 
 <hr/>
 
-In our quest to find out what makes a Hidden Gem , we dived deeper into a Hidden Gem  Title and a Hidden Gem Review     
+In our quest to find out what makes a Hidden Gem , we dived deeper into a Hidden Gem  Title and a Hidden Gem Review. Following are the observations              
 
 We found that Hidden Gem Titles with **2 most commonly occurring words** include **data analysis** , **data science** and **time series** .        
 
@@ -59,6 +59,9 @@ We also found that Hidden Gem Reviews with **2 most commonly occurring words** i
 We also wanted to find out topics which are interesting for Hidden Gems. Most prominent topics include  **detailed exploration** ,  **competition** ,  **data analysis** , and  **data visuals**          
 
 Mining the Hidden Gem Titles and Reviews it seems that notebooks with **detailed exploratory data analysis catches the eye of the Hidden Gem Creator**
+
+We also dived deeper into the leading Hidden Gem Author reviews and found the notebooks are detailed and have beautiful visuals and exploratory data analysis          
+
 
 <hr/ >
 
@@ -177,7 +180,11 @@ jb_gems %>%
 
 ```
 
-## Jonathan Bouchet - Leading Hidden Gem Author reviews           
+## Jonathan Bouchet - Leading Hidden Gem Author reviews     
+
+The reviews reveal that these notebooks are detailed and have very detail exploration. You would also be treated with beautiful and insightful visualizations through this          
+
+
 ```{r,message=FALSE,warning=FALSE}
 
 gem_review <- gems %>% 
