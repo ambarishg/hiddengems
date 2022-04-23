@@ -218,7 +218,7 @@ review_word_pairs %>%
 
 ## Ramshankar Yadhunath - Leading Hidden Gem Author reviews     
 
-The reviews reveal that these notebooks are detailed and have very detail exploration. You would also be treated with beautiful and insightful visualizations through this          
+The reviews reveal that these notebooks have visual analysis and visual interpretations              
 
 
 ```{r,message=FALSE,warning=FALSE}
