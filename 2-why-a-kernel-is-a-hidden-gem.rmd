@@ -177,6 +177,38 @@ jb_gems %>%
 
 ```
 
+## Jonathan Bouchet - Leading Hidden Gem Author reviews           
+```{r,message=FALSE,warning=FALSE}
+
+gem_review <- gems %>% 
+  filter(author_name == "Jonathan Bouchet") %>%
+  select(notebook,review) %>%
+  unnest_tokens(word, review) %>% 
+  anti_join(stop_words)
+
+
+review_word_pairs <- gem_review %>% 
+  pairwise_count(word, notebook, sort = TRUE, upper = FALSE) %>%
+  filter( item1 != "www.kaggle.com") %>%
+  filter( item2 != "www.kaggle.com") %>%
+  filter( item1 != "https")
+
+set.seed(1234)
+review_word_pairs %>%
+  filter(n >= 3) %>%
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "darkred") +
+  geom_node_point(size = 5) +
+  geom_node_text(aes(label = name), repel = TRUE,
+                 point.padding = unit(0.2, "lines")) +
+  theme_void()
+
+
+```
+
+
+
 # Tags and Percentage        
 
 **Data Visualization** and **EDA** are the top most Tag contributors for the hidden gems         
@@ -1191,35 +1223,5 @@ top_terms %>%
 
 ```
                                          
-## Jonathan Bouchet - Leading Hidden Gem Author reviews            
-                                                     
-```{r}
-
-gem_review <- gems %>% 
-  filter(author_name == "Jonathan Bouchet") %>%
-  select(notebook,review) %>%
-  unnest_tokens(word, review) %>% 
-  anti_join(stop_words)
-
-
-review_word_pairs <- gem_review %>% 
-  pairwise_count(word, notebook, sort = TRUE, upper = FALSE) %>%
-  filter( item1 != "www.kaggle.com") %>%
-  filter( item2 != "www.kaggle.com") %>%
-  filter( item1 != "https")
-
-set.seed(1234)
-review_word_pairs %>%
-  filter(n >= 2) %>%
-  graph_from_data_frame() %>%
-  ggraph(layout = "fr") +
-  geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "darkred") +
-  geom_node_point(size = 5) +
-  geom_node_text(aes(label = name), repel = TRUE,
-                 point.padding = unit(0.2, "lines")) +
-  theme_void()
-
-
-```
 
                                                      
