@@ -58,7 +58,9 @@ We also found that Hidden Gem Reviews with **2 most commonly occurring words** i
 
 We also wanted to find out topics which are interesting for Hidden Gems. Most prominent topics include  **detailed exploration** ,  **competition** ,  **data analysis** , and  **data visuals**          
 
+<span style="background:#fed56f; font-weight:bold; color:black">
 Mining the Hidden Gem Titles and Reviews it seems that notebooks with **detailed exploratory data analysis catches the eye of the Hidden Gem Creator**
+</span>
 
 We also dived deeper into the leading Hidden Gem Author reviews and found the notebooks are detailed and have beautiful visuals and exploratory data analysis          
 
