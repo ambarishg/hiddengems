@@ -1244,7 +1244,10 @@ review_word_pairs %>%
 
 ```
 
-### Competition reviews        
+### Competition reviews         
+
+There are **34**  Competition reviews. The network graph shows that the hidden gems concentrate on **clean competition solutions in notebook format**. Frameworks commonly found in reviews include tensorflow, rapids. NLP also occurs in the reviews.           
+
 
 ```{r,message=FALSE,warning=FALSE}
 
