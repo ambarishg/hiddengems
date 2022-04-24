@@ -254,10 +254,15 @@ review_word_pairs %>%
 
 ## Vopani - Leading Hidden Gem Author reviews     
 
-The reviews reveal that these notebooks have visual analysis and visual interpretations              
+3 different clusters of reviews. The cluster focused on read table, cudf , pandas . The other cluster focused on   hugging face , tensorflow . The third cluster on the 2019 , 2020 survey            
 
 
 ```{r,message=FALSE,warning=FALSE}
+
+gems %>% 
+  filter(author_name == "Vopani") %>%
+  select(title,review)
+
 
 gem_review <- gems %>% 
   filter(author_name == "Vopani") %>%
