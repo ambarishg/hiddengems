@@ -15,7 +15,6 @@ output:
 
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo=TRUE, error=FALSE)
-knitr::opts_chunk$set(out.width="100%", fig.width = 10, split=FALSE, fig.align = 'default', fig.asp = 0.618)
 options(dplyr.summarise.inform = FALSE)
 ```
 
@@ -283,7 +282,7 @@ p1 %>%
        title = 'Tags and Percentage') +
   guides(fill=guide_legend(title="Tags Percentage")) +
   coord_flip() + 
-  theme_bw()
+  theme_bw(base_size = 15)
 
 ```
 
@@ -320,7 +319,7 @@ p1 %>%
        y = 'Percentage', 
        title = 'Performance Tier and Percentage') +
   coord_flip() + 
-  theme_bw() +
+  theme_bw(base_size = 15) +
   theme(legend.position = "none") 
 
 
@@ -657,7 +656,7 @@ p1 <- kvcs %>%
        title = 'Medal and Percentage') +
   coord_flip() + 
   guides(fill=guide_legend(title="Medal Distribution")) +
-  theme_bw()
+  theme_bw(base_size = 15)
 
 
 ```
@@ -1244,18 +1243,15 @@ review_word_pairs %>%
 
 ```
 
-### Competition reviews         
-
-There are **34**  Competition reviews. The network graph shows that the hidden gems concentrate on **clean competition solutions in notebook format**. Frameworks commonly found in reviews include tensorflow, rapids. NLP also occurs in the reviews.           
-
+### Competition reviews        
 
 ```{r,message=FALSE,warning=FALSE}
 
 gems_competition = gems %>%
   filter(str_detect(review,"competition"))%>%
-  select(title,review)
+  select(notebook,title,review)
 
-nrow(gems_competition)
+
 
   gems_competition %>%
   gt() %>%
