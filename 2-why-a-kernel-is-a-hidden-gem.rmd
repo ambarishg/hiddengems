@@ -27,7 +27,7 @@ We wanted  to find out what makes a Kernel a **Hidden Gem**. We looked at the **
 
 We then did a Dimension Reduction of the Hidden Gems  to see which of the factors contribute the most in making a Kernel in the Hidden Gem. We found that the  **Total Votes , Total Comments , Total Views and Medal** contributes the most . The other factors which influenced a lot are **Whether the Notebook is a Competition Notebook or Not** and **Maximum Version Number ** of the Notebook    
 
-More than **85%** of the Hidden Gems are **Non Competition Notebooks**       
+More than **84%** of the Hidden Gems are **Non Competition Notebooks**       
 
 Using these factors, we compiled a very **simple rules based recommender** for finding Hidden Gems for Notebooks created between 2021 June to 2021 December [  This is chosen to reduce the dataset analysis purposes only ]
 
@@ -693,12 +693,13 @@ kvcs_versions_info = kvcs_versions_info %>%
 
 ```
 
-## Box Plot 
+## Box Plot [ Removing Outliers ] 
 
 ```{r,message=FALSE,warning=FALSE}
 
 kvcs_versions_info %>%
   filter(!is.na(MaxVersionNumber)) %>%
+  filter(MaxVersionNumber < 40) %>%
       ggplot(aes(x = MaxVersionNumber, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [MaxVersionNumber]',y = ' [Count]', title = paste("Distribution of", ' MaxVersionNumber ')) +
@@ -1225,7 +1226,7 @@ review_word_pairs %>%
 
 ## Topic Modelling of Hidden Gem Reviews             
 
-We did a Topic modelling of the Hidden Gem Reviews and we have chosen 10 topics. The topic 1 as we see is associated with **detailed exploration** , topic 2 is associated with **competition** , topic 3 is associated with **data analysis** , topic 4 is associated with **data visuals**       
+We did a Topic modelling of the Hidden Gem Reviews and we have chosen 8 topics. The topic 1 as we see is associated with **detailed exploration** , topic 2 is associated with **competition** , topic 3 is associated with **data analysis** , topic 4 is associated with **data visuals**       
 
 
 
