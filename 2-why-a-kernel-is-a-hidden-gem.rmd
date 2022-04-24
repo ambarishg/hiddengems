@@ -259,9 +259,14 @@ review_word_pairs %>%
 
 ```{r,message=FALSE,warning=FALSE}
 
-gems %>% 
+ a = gems %>% 
   filter(author_name == "Vopani") %>%
   select(title,review)
+
+ a %>%
+  gt() %>%
+  tab_header(
+    title = "Vopani Hidden Gems")
 
 
 gem_review <- gems %>% 
