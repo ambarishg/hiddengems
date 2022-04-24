@@ -1244,6 +1244,26 @@ review_word_pairs %>%
 
 ```
 
+### Competition reviews        
+
+```{r,message=FALSE,warning=FALSE}
+
+gems_competition = gems %>%
+  filter(str_detect(review,"competition"))%>%
+  select(notebook,title,review)
+
+
+
+  gems_competition %>%
+  gt() %>%
+  tab_header(
+    title = "Competition Reviews")
+
+
+
+```
+
+
 ## Topic Modelling of Hidden Gem Reviews             
 
 We did a Topic modelling of the Hidden Gem Reviews and we have chosen 8 topics. The topic 1 as we see is associated with **detailed exploration** , topic 2 is associated with **competition** , topic 3 is associated with **data analysis** , topic 4 is associated with **data visuals**       
