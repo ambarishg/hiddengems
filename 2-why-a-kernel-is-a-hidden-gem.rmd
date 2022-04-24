@@ -1250,9 +1250,9 @@ review_word_pairs %>%
 
 gems_competition = gems %>%
   filter(str_detect(review,"competition"))%>%
-  select(notebook,title,review)
+  select(title,review)
 
-
+nrow(gems_competition)
 
   gems_competition %>%
   gt() %>%
