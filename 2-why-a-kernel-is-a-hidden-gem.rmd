@@ -157,13 +157,13 @@ gems %>%
   ggplot(aes(x = author_name,y = Count)) +
   geom_bar(stat='identity',colour="white", fill = fillColor2) +
   geom_text(aes(x = author_name, y = 1, label = paste0("(",Count,")",sep="")),
-            hjust=0, vjust=.5, size = 4, colour = 'black',
+            hjust=0, vjust=.5, size = 6, colour = 'black',
             fontface = 'bold') +
   labs(x = 'author', 
        y = 'Count', 
        title = 'author and Count') +
   coord_flip() + 
-  theme_bw()
+  theme_bw(base_size = 15)
 ```
 
 ## Jonathan Bouchet Notebooks -  Top Hidden Gem Author
@@ -213,7 +213,7 @@ review_word_pairs %>%
   geom_node_point(size = 5) +
   geom_node_text(aes(label = name), repel = TRUE,
                  point.padding = unit(0.2, "lines")) +
-  theme_void()
+  theme_void(base_size = 15)
 
 
 ```
@@ -247,7 +247,7 @@ review_word_pairs %>%
   geom_node_point(size = 5) +
   geom_node_text(aes(label = name), repel = TRUE,
                  point.padding = unit(0.2, "lines")) +
-  theme_void()
+  theme_void(base_size = 15)
 
 
 ```
@@ -275,7 +275,7 @@ p1 %>%
   geom_bar(stat='identity',colour="white")  +
   geom_text(aes(x = Slug, y = 1, 
                 label = paste0("( ",round(Percentage,2)," %)",sep="")),
-            hjust=0, vjust=.5, size = 4, colour = 'black',
+            hjust=0, vjust=.5, size = 6, colour = 'black',
             fontface = 'bold') +
   labs(x = 'Slug', 
        y = 'Percentage', 
@@ -480,7 +480,7 @@ kvcs %>%
       ggplot(aes(x = TotalComments, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
-      theme_bw() +
+      theme_bw(base_size = 15) +
   theme(legend.position = "none") 
                                                      
 
@@ -497,7 +497,7 @@ kvcs %>%
       geom_density(fill = "orange", bw = 0.01) +
       labs(x= ' [TotalComments]',y = ' [Count]', title = paste("Distribution of", ' Total Comments ')) +
   guides(fill=guide_legend(title="Total Comments Distribution")) +
-      theme_bw()
+      theme_bw(base_size = 15)
 
 ```
 
@@ -548,7 +548,7 @@ kvcs %>%
       ggplot(aes(x = TotalViews, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [Total TotalViews]',y = ' [Count]', title = paste("Distribution of", ' Total TotalViews ')) +
-      theme_bw() +
+      theme_bw(base_size = 15) +
   theme(legend.position = "none") 
                                                      
 
@@ -581,7 +581,7 @@ kvcs %>%
       scale_y_log10() + 
       labs(x= 'Log [TotalViews]',y = 'Log [Count]', title = paste("Distribution of", ' Total Views ')) +
   guides(fill=guide_legend(title="Total Views Distribution")) +
-      theme_bw()
+      theme_bw(base_size = 15)
 
 ```
 
@@ -649,7 +649,7 @@ p1 <- kvcs %>%
   scale_fill_manual(values = medal_colors) + 
   geom_text(aes(x = Medal_Name, y = 1, 
                 label = paste0("( ",round(Percentage,2)," %)",sep="")),
-            hjust=0, vjust=.5, size = 4, colour = 'black',
+            hjust=0, vjust=.5, size = 6, colour = 'black',
             fontface = 'bold') +
   labs(x = 'Medal', 
        y = 'Percentage', 
@@ -1007,7 +1007,7 @@ kernel_gems_votes %>%
        y = 'Count', 
        title = 'Notebook and Count') +
   coord_flip() + 
-  theme_bw()
+  theme_bw(base_size = 15)
   
   
   s = 
