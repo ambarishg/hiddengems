@@ -15,7 +15,6 @@ output:
 
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo=TRUE, error=FALSE)
-knitr::opts_chunk$set(out.width="100%", fig.width = 10, split=FALSE, fig.align = 'default', fig.asp = 0.618)
 options(dplyr.summarise.inform = FALSE)
 ```
 
@@ -158,13 +157,13 @@ gems %>%
   ggplot(aes(x = author_name,y = Count)) +
   geom_bar(stat='identity',colour="white", fill = fillColor2) +
   geom_text(aes(x = author_name, y = 1, label = paste0("(",Count,")",sep="")),
-            hjust=0, vjust=.5, size = 4, colour = 'black',
+            hjust=0, vjust=.5, size = 6, colour = 'black',
             fontface = 'bold') +
   labs(x = 'author', 
        y = 'Count', 
        title = 'author and Count') +
   coord_flip() + 
-  theme_bw()
+  theme_bw(base_size = 15)
 ```
 
 ## Jonathan Bouchet Notebooks -  Top Hidden Gem Author
@@ -214,7 +213,7 @@ review_word_pairs %>%
   geom_node_point(size = 5) +
   geom_node_text(aes(label = name), repel = TRUE,
                  point.padding = unit(0.2, "lines")) +
-  theme_void()
+  theme_void(base_size = 15)
 
 
 ```
@@ -248,7 +247,50 @@ review_word_pairs %>%
   geom_node_point(size = 5) +
   geom_node_text(aes(label = name), repel = TRUE,
                  point.padding = unit(0.2, "lines")) +
-  theme_void()
+  theme_void(base_size = 15)
+
+
+```
+
+## Vopani - Leading Hidden Gem Author reviews     
+
+3 different clusters of reviews. The cluster focused on read table, cudf , pandas . The other cluster focused on   hugging face , tensorflow . The third cluster on the 2019 , 2020 survey            
+
+
+```{r,message=FALSE,warning=FALSE}
+
+ a = gems %>% 
+  filter(author_name == "Vopani") %>%
+  select(title,review)
+
+ a %>%
+  gt() %>%
+  tab_header(
+    title = "Vopani Hidden Gems")
+
+
+gem_review <- gems %>% 
+  filter(author_name == "Vopani") %>%
+  select(notebook,review) %>%
+  unnest_tokens(word, review) %>% 
+  anti_join(stop_words)
+
+
+review_word_pairs <- gem_review %>% 
+  pairwise_count(word, notebook, sort = TRUE, upper = FALSE) %>%
+  filter( item1 != "www.kaggle.com") %>%
+  filter( item2 != "www.kaggle.com") %>%
+  filter( item1 != "https")
+
+set.seed(1234)
+review_word_pairs %>%
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "darkred") +
+  geom_node_point(size = 5) +
+  geom_node_text(aes(label = name), repel = TRUE,
+                 point.padding = unit(0.2, "lines")) +
+  theme_void(base_size = 15)
 
 
 ```
@@ -276,14 +318,14 @@ p1 %>%
   geom_bar(stat='identity',colour="white")  +
   geom_text(aes(x = Slug, y = 1, 
                 label = paste0("( ",round(Percentage,2)," %)",sep="")),
-            hjust=0, vjust=.5, size = 4, colour = 'black',
+            hjust=0, vjust=.5, size = 6, colour = 'black',
             fontface = 'bold') +
   labs(x = 'Slug', 
        y = 'Percentage', 
        title = 'Tags and Percentage') +
   guides(fill=guide_legend(title="Tags Percentage")) +
   coord_flip() + 
-  theme_bw()
+  theme_bw(base_size = 15)
 
 ```
 
@@ -320,7 +362,7 @@ p1 %>%
        y = 'Percentage', 
        title = 'Performance Tier and Percentage') +
   coord_flip() + 
-  theme_bw() +
+  theme_bw(base_size = 15) +
   theme(legend.position = "none") 
 
 
@@ -481,7 +523,7 @@ kvcs %>%
       ggplot(aes(x = TotalComments, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
-      theme_bw() +
+      theme_bw(base_size = 15) +
   theme(legend.position = "none") 
                                                      
 
@@ -498,7 +540,7 @@ kvcs %>%
       geom_density(fill = "orange", bw = 0.01) +
       labs(x= ' [TotalComments]',y = ' [Count]', title = paste("Distribution of", ' Total Comments ')) +
   guides(fill=guide_legend(title="Total Comments Distribution")) +
-      theme_bw()
+      theme_bw(base_size = 15)
 
 ```
 
@@ -549,7 +591,7 @@ kvcs %>%
       ggplot(aes(x = TotalViews, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [Total TotalViews]',y = ' [Count]', title = paste("Distribution of", ' Total TotalViews ')) +
-      theme_bw() +
+      theme_bw(base_size = 15) +
   theme(legend.position = "none") 
                                                      
 
@@ -582,7 +624,7 @@ kvcs %>%
       scale_y_log10() + 
       labs(x= 'Log [TotalViews]',y = 'Log [Count]', title = paste("Distribution of", ' Total Views ')) +
   guides(fill=guide_legend(title="Total Views Distribution")) +
-      theme_bw()
+      theme_bw(base_size = 15)
 
 ```
 
@@ -650,14 +692,14 @@ p1 <- kvcs %>%
   scale_fill_manual(values = medal_colors) + 
   geom_text(aes(x = Medal_Name, y = 1, 
                 label = paste0("( ",round(Percentage,2)," %)",sep="")),
-            hjust=0, vjust=.5, size = 4, colour = 'black',
+            hjust=0, vjust=.5, size = 6, colour = 'black',
             fontface = 'bold') +
   labs(x = 'Medal', 
        y = 'Percentage', 
        title = 'Medal and Percentage') +
   coord_flip() + 
   guides(fill=guide_legend(title="Medal Distribution")) +
-  theme_bw()
+  theme_bw(base_size = 15)
 
 
 ```
@@ -1008,7 +1050,7 @@ kernel_gems_votes %>%
        y = 'Count', 
        title = 'Notebook and Count') +
   coord_flip() + 
-  theme_bw()
+  theme_bw(base_size = 15)
   
   
   s = 
@@ -1244,18 +1286,15 @@ review_word_pairs %>%
 
 ```
 
-### Competition reviews         
-
-There are **34**  Competition reviews. The network graph shows that the hidden gems concentrate on **clean competition solutions in notebook format**. Frameworks commonly found in reviews include tensorflow, rapids. NLP also occurs in the reviews.           
-
+### Competition reviews        
 
 ```{r,message=FALSE,warning=FALSE}
 
 gems_competition = gems %>%
   filter(str_detect(review,"competition"))%>%
-  select(title,review)
+  select(notebook,title,review)
 
-nrow(gems_competition)
+
 
   gems_competition %>%
   gt() %>%
