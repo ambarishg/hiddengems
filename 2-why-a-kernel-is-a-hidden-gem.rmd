@@ -1233,6 +1233,7 @@ review_word_pairs %>%
 set.seed(1234)
 review_word_pairs %>%
   filter((item1 == "competition") | (item2 == "competition") )%>%
+  filter( n >= 4) %>%
   graph_from_data_frame() %>%
   ggraph(layout = "fr") +
   geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "darkred") +
