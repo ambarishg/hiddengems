@@ -202,6 +202,9 @@ review_word_pairs <- gem_review %>%
   filter( item2 != "www.kaggle.com") %>%
   filter( item1 != "https")
 
+review_word_pairs
+
+
 set.seed(1234)
 review_word_pairs %>%
   filter(n >= 2) %>%
