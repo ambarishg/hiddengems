@@ -388,12 +388,13 @@ The following plot shows the distribution of Total  Votes for a Hidden Gem.
 
 95% Confidence Interval for a Hidden Gem Votes is between **44** and **65** 
 
-## Box Plot 
+## Box Plot ( without Outliers )
 
 ```{r,message=FALSE,warning=FALSE}
 
 kvcs %>%
   filter(!is.na(TotalVotes)) %>%
+  filter( TotalVotes < 400) %>%
       ggplot(aes(x = TotalVotes, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
@@ -403,13 +404,14 @@ kvcs %>%
 
 ```
 
-## Box Plot ( without Outliers )
+
+
+## Box Plot 
 
 ```{r,message=FALSE,warning=FALSE}
 
 kvcs %>%
   filter(!is.na(TotalVotes)) %>%
-  filter( TotalVotes < 400) %>%
       ggplot(aes(x = TotalVotes, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
@@ -1221,6 +1223,16 @@ review_word_pairs %>%
   geom_node_text(aes(label = name), repel = TRUE,
                  point.padding = unit(0.2, "lines")) +
   theme_void()
+
+```
+
+## Competition Network Graph
+
+```{r,message=FALSE,warning=FALSE}
+
+set.seed(1234)
+review_word_pairs %>%
+  filter((item1 == "competition") || (item2 == "competition") )
 
 ```
 
