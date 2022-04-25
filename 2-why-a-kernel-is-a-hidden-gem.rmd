@@ -256,6 +256,30 @@ drawNetworkGraph("Vopani",occur=1)
 ```
 
 
+
+
+## kxx - Leading Hidden Gem Author reviews     
+
+           
+
+
+```{r,message=FALSE,warning=FALSE}
+
+ a = gems %>% 
+  filter(author_name == "kxx") %>%
+  select(title,review)
+
+ a %>%
+  gt() %>%
+  tab_header(
+    title = "kxx Hidden Gems")
+
+drawNetworkGraph("kxx",occur=1)
+
+
+```
+
+
 # Tags and Percentage        
 
 **Data Visualization** and **EDA** are the top most Tag contributors for the hidden gems         
