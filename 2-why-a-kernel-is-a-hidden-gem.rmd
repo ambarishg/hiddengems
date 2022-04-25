@@ -364,7 +364,7 @@ getTagsAuthor <- function(author) {
     ggplot(aes(x = Slug,y = Percentage, fill = foo )) +
     geom_bar(stat='identity',colour="white") +
     scale_fill_manual(values = c(fillColor2,fillColor)) +
-    geom_text(aes(label = round(Percentage,2))) +
+    geom_label(aes(label = paste0("( ",round(Percentage,2)," %)",sep=""))) + 
     labs(x = 'Slug', 
          y = 'Percentage', 
          title = 'Tags and Percentage') +
@@ -386,13 +386,7 @@ getTagsAuthor("Ramshankar Yadhunath")
 
 ```
 
-## kxx Tags       
 
-```{r}
-
-getTagsAuthor("kxx")
-
-```
 
 ## Vopani Tags       
 
