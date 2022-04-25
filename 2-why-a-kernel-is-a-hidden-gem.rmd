@@ -284,8 +284,7 @@ drawNetworkGraph("kxx",occur=1)
 
 ## Bojan Tunguz - Leading Hidden Gem Author reviews     
 
-  
-
+Reviews strongly indicate the words **gpu** , **rapids**, **xgboost**       
 
 ```{r,message=FALSE,warning=FALSE}
 
@@ -304,10 +303,9 @@ drawNetworkGraph("Bojan Tunguz",occur=1)
 ```
 
 
-# Tags and Percentage        
+# Tags and Percentage{.tabset .tabset-fade .tabset-pills}        
 
-**Data Visualization** and **EDA** are the top most Tag contributors for the hidden gems         
-
+**Data Visualization** and **EDA** are the top most Tag contributors for the hidden gems. Jonathan Bouchet and    Ramshankar Yadhunath have **data visualization and eda** as their most popular tags. Vopani's popular tags include **beginner , tpu , tensorflow**. Bojan Tunguz's most popular tags include **gpu , xgboost**        
 
 ```{r,message=FALSE,warning=FALSE}
 
