@@ -18,9 +18,6 @@ knitr::opts_chunk$set(echo=TRUE, error=FALSE)
 options(dplyr.summarise.inform = FALSE)
 ```
 
-**The NOTEBOOK Why a Kernel is a Hidden Gem cannot be updated in Kaggle because of INTERNAL ERROR, hence this notebook. This is a continuation of the original notebook
-Why a Kernel is a Hidden Gem**
-
 **Heads or Tails** has compiled a list of 300 kernels for a period of 100 weeks which he believes are **Hidden Gems** , Kernels which are Gems but they did not get their due recognition. Thanks to the wonderful effort, Heads or Tails for the Kaggle Community.                          
 
 
@@ -64,8 +61,11 @@ We also wanted to find out topics which are interesting for Hidden Gems. Most pr
 Mining the Hidden Gem Titles and Reviews it seems that notebooks with **detailed exploratory data analysis catches the eye of the Hidden Gem Creator**
 </span>
 
-We also dived deeper into the leading Hidden Gem Author reviews and found the notebooks are detailed and have beautiful visuals and exploratory data analysis          
+We also dived deeper into the leading Hidden Gem Authors' [ Jonathan Bouchet and Ramshankar Yadunath ] reviews and found the notebooks are detailed and have beautiful visuals and exploratory data analysis    
 
+
+We also saw another genre of reviews of Vopani, kxx and Bojan Tunguz and saw these reviews appreciated the various techniques <span style="background:blue; color:white">using structured datasets in competitions. It also focussed on model building using Keras as well as XGBoost [Bojan's reviews]
+</span>
 
 <hr/ >
 
@@ -1142,11 +1142,37 @@ a = s %>%
   select(notebook,title,review)
 
 
-
+  gem_review <- a %>%
+    select(notebook,review) %>%
+    unnest_tokens(word, review) %>% 
+    anti_join(stop_words)
+  
+  
+  review_word_pairs <- gem_review %>% 
+    pairwise_count(word, notebook, sort = TRUE, upper = FALSE) %>%
+    filter( item1 != "www.kaggle.com") %>%
+    filter( item2 != "www.kaggle.com") %>%
+    filter( item1 != "https")
+  
+  occur = 2
+  set.seed(1234)
+  review_word_pairs %>%
+    filter(n >= occur) %>%
+    graph_from_data_frame() %>%
+    ggraph(layout = "fr") +
+    geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "darkred") +
+    geom_node_point(size = 5) +
+    geom_node_text(aes(label = name), repel = TRUE,
+                   point.padding = unit(0.2, "lines")) +
+    theme_void(base_size = 15)
+  
   a %>%
   gt() %>%
   tab_header(
     title = "Highest Votes after the Hidden Gem Declaration")
+  
+  
+  
 
 ```
 
@@ -1344,6 +1370,10 @@ review_word_pairs %>%
 ```
 
 ## Competition Network Graph
+
+The reviews featuring competitions show the following words :
+**recent competition solution** , **competition discussion** ,
+and also focus on **clean competition solution as well as detailed competition solution**         
 
 ```{r,message=FALSE,warning=FALSE}
 
