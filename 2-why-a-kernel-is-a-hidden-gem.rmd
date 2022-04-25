@@ -274,8 +274,9 @@ p1 <- kernels_gems_tags %>%
 
 p1 %>%
   filter(!is.na(Slug)) %>%
-  ggplot(aes(x = Slug,y = Percentage, fill = fillColor )) +
+  ggplot(aes(x = Slug,y = Percentage )) +
   geom_bar(stat='identity',colour="white")  +
+  scale_fill_manual(values = c(fillColor2,fillColor)) + 
   geom_text(aes(x = Slug, y = 1, 
                 label = paste0("( ",round(Percentage,2)," %)",sep="")),
             hjust=0, vjust=.5, size = 6, colour = 'black',
