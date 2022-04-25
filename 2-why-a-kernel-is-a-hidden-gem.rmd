@@ -280,6 +280,30 @@ drawNetworkGraph("kxx",occur=1)
 ```
 
 
+
+
+## Bojan Tunguz - Leading Hidden Gem Author reviews     
+
+  
+
+
+```{r,message=FALSE,warning=FALSE}
+
+ a = gems %>% 
+  filter(author_name == "Bojan Tunguz") %>%
+  select(title,review)
+
+ a %>%
+  gt() %>%
+  tab_header(
+    title = "Bojan Tunguz Hidden Gems")
+
+drawNetworkGraph("Bojan Tunguz",occur=1)
+
+
+```
+
+
 # Tags and Percentage        
 
 **Data Visualization** and **EDA** are the top most Tag contributors for the hidden gems         
@@ -315,6 +339,41 @@ p1 %>%
   theme(legend.position = "none") 
 
 ```
+
+## Jonathan Bouchet Tags           
+
+```{r}
+
+p1 <- kernels_gems_tags %>%
+  filter(author_name == "Jonathan Bouchet") %>%
+  group_by(Slug) %>%
+  summarise(Percentage = n()/TotalNoOfRows *100) %>%
+  arrange(desc(Percentage)) %>%
+  head(10) %>%
+  ungroup() %>%
+  mutate(Slug = reorder(Slug,Percentage))
+
+p1 %>%
+  filter(!is.na(Slug)) %>%
+  mutate(foo = Percentage > 9 ) %>%
+  ggplot(aes(x = Slug,y = Percentage, fill = foo )) +
+  geom_bar(stat='identity',colour="white")  +
+  scale_fill_manual(values = c(fillColor2,fillColor)) + 
+  geom_text(aes(x = Slug, y = 1, 
+                label = paste0("( ",round(Percentage,2)," %)",sep="")),
+            hjust=0, vjust=.5, size = 6, colour = 'black',
+            fontface = 'bold') +
+  labs(x = 'Slug', 
+       y = 'Percentage', 
+       title = 'Tags and Percentage') +
+  guides(fill=guide_legend(title="Tags Percentage")) +
+  coord_flip() + 
+  theme_bw(base_size = 15) +
+  theme(legend.position = "none") 
+
+
+```
+
 
 
 # Performance Tier and Gems   
