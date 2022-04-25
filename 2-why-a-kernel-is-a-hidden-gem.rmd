@@ -344,36 +344,71 @@ p1 %>%
 
 ```{r}
 
-kernels_gems_tags_jb = kernels_gems_tags %>%
-  filter(author_name == "Jonathan Bouchet")
+getTagsAuthor <- function(author) {
+  kernels_gems_tags_jb = kernels_gems_tags %>%
+    filter(author_name == author)
+  
+  TotalNoOfRows = nrow(kernels_gems_tags_jb)
+  
+  p1 <- kernels_gems_tags_jb %>%
+    group_by(Slug) %>%
+    summarise(Percentage = n()/TotalNoOfRows *100) %>%
+    arrange(desc(Percentage)) %>%
+    head(10) %>%
+    ungroup() %>%
+    mutate(Slug = reorder(Slug,Percentage))
+  
+  p1 %>%
+    filter(!is.na(Slug)) %>%
+    mutate( foo = Percentage > 10 ) %>%
+    ggplot(aes(x = Slug,y = Percentage, fill = foo )) +
+    geom_bar(stat='identity',colour="white") +
+    scale_fill_manual(values = c(fillColor2,fillColor)) +
+    geom_text(aes(label = round(Percentage,2))) +
+    labs(x = 'Slug', 
+         y = 'Percentage', 
+         title = 'Tags and Percentage') +
+    guides(fill=guide_legend(title="Tags Percentage")) +
+    coord_flip() + 
+    theme_bw(base_size = 15) +
+    theme(legend.position = "none") 
+}
 
-TotalNoOfRows = nrow(kernels_gems_tags_jb)
-
-p1 <- kernels_gems_tags_jb %>%
-  group_by(Slug) %>%
-  summarise(Percentage = n()/TotalNoOfRows *100) %>%
-  arrange(desc(Percentage)) %>%
-  head(10) %>%
-  ungroup() %>%
-  mutate(Slug = reorder(Slug,Percentage))
-
-p1 %>%
-  filter(!is.na(Slug)) %>%
-  ggplot(aes(x = Slug,y = Percentage, fill = fillColor2 )) +
-  geom_bar(stat='identity',colour="white") +
-  geom_text(aes(label = paste0("( ",round(Percentage,2)," %)",sep=""))) +
-  labs(x = 'Slug', 
-       y = 'Percentage', 
-       title = 'Tags and Percentage') +
-  guides(fill=guide_legend(title="Tags Percentage")) +
-  coord_flip() + 
-  theme_bw(base_size = 15) +
-  theme(legend.position = "none") 
-
+getTagsAuthor("Jonathan Bouchet")
 
 ```
 
+## Ramshankar Yadhunath Tags       
 
+```{r}
+
+getTagsAuthor("Ramshankar Yadhunath")
+
+```
+
+## kxx Tags       
+
+```{r}
+
+getTagsAuthor("kxx")
+
+```
+
+## Vopani Tags       
+
+```{r}
+
+getTagsAuthor("Vopani")
+
+```
+
+## Bojan Tunguz Tags       
+
+```{r}
+
+getTagsAuthor("Bojan Tunguz")
+
+```
 
 # Performance Tier and Gems   
 
