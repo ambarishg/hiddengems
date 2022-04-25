@@ -18,6 +18,9 @@ knitr::opts_chunk$set(echo=TRUE, error=FALSE)
 options(dplyr.summarise.inform = FALSE)
 ```
 
+**The NOTEBOOK Why a Kernel is a Hidden Gem cannot be updated in Kaggle because of INTERNAL ERROR, hence this notebook. This is a continuation of the original notebook
+Why a Kernel is a Hidden Gem**
+
 **Heads or Tails** has compiled a list of 300 kernels for a period of 100 weeks which he believes are **Hidden Gems** , Kernels which are Gems but they did not get their due recognition. Thanks to the wonderful effort, Heads or Tails for the Kaggle Community.                          
 
 
