@@ -287,7 +287,8 @@ p1 %>%
        title = 'Tags and Percentage') +
   guides(fill=guide_legend(title="Tags Percentage")) +
   coord_flip() + 
-  theme_bw(base_size = 15)
+  theme_bw(base_size = 15) +
+  theme(legend.position = "none") 
 
 ```
 
