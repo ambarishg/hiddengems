@@ -260,7 +260,7 @@ drawNetworkGraph("Vopani",occur=1)
 
 ## kxx - Leading Hidden Gem Author reviews     
 
-           
+3 clusters are visible. The 1st cluster is about keras and tidymodels . The 2nd cluster is about the tabular sparse data in the santander competition. The 3rd cluster is about image classification of leaf disease. Please note the connection between the 1st cluster and the 2nd cluster is through model   
 
 
 ```{r,message=FALSE,warning=FALSE}
