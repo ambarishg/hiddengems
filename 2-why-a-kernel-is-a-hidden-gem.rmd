@@ -1518,20 +1518,20 @@ We looked at the reviews where the word **image** is present. The image reviews 
 
 ```{r,message=FALSE,warning=FALSE}
 
-gem_review <- gems %>% 
+gem_review_image <- gems %>% 
   select(notebook,review) %>%
   filter(str_detect(review,"image"))%>%
   unnest_tokens(word, review) %>% 
   anti_join(stop_words) 
 
-gem_review %>%
+gem_review_image %>%
   count(word,sort = TRUE) %>%
   ungroup()  %>%
   head(30) %>%
   
   with(wordcloud(word, n, max.words = 30,colors=brewer.pal(8, "Dark2")))
 
-review_word_pairs <- gem_review %>% 
+review_word_pairs <- gem_review_image %>% 
   pairwise_count(word, notebook, sort = TRUE, upper = FALSE) %>%
   filter( item1 != "www.kaggle.com") %>%
   filter( item2 != "www.kaggle.com") %>%
