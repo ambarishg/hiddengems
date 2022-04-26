@@ -1510,6 +1510,81 @@ gems_competition = gems %>%
 ```
 
 
+## Image Network Graph
+
+We looked at the reviews where the word **image** is present. The image reviews indicate **detailed** image notebooks. Well narrated notebooks , notebooks having clever strategy is also appreciated.          
+
+        
+
+```{r,message=FALSE,warning=FALSE}
+
+gem_review <- gems %>% 
+  select(notebook,review) %>%
+  filter(str_detect(review,"image"))%>%
+  unnest_tokens(word, review) %>% 
+  anti_join(stop_words) 
+
+gem_review %>%
+  count(word,sort = TRUE) %>%
+  ungroup()  %>%
+  head(30) %>%
+  
+  with(wordcloud(word, n, max.words = 30,colors=brewer.pal(8, "Dark2")))
+
+review_word_pairs <- gem_review %>% 
+  pairwise_count(word, notebook, sort = TRUE, upper = FALSE) %>%
+  filter( item1 != "www.kaggle.com") %>%
+  filter( item2 != "www.kaggle.com") %>%
+  filter( item1 != "https")
+
+
+set.seed(1234)
+review_word_pairs %>%
+  filter( n >= 2) %>%
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "darkred") +
+  geom_node_point(size = 5) +
+  geom_node_text(aes(label = name), repel = TRUE,
+                 point.padding = unit(0.2, "lines")) +
+  theme_void()
+
+```
+
+### Image reviews        
+
+```{r,message=FALSE,warning=FALSE}
+
+gems_image = gems %>%
+  filter(str_detect(review,"image"))%>%
+  select(notebook,title,review)
+
+
+
+  gems_image %>%
+  gt() %>%
+  tab_header(
+    title = "Image Reviews")
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## Topic Modelling of Hidden Gem Reviews             
 
 We did a Topic modelling of the Hidden Gem Reviews and we have chosen 8 topics. The topic 1 as we see is associated with **detailed exploration** , topic 2 is associated with **competition** , topic 3 is associated with **data analysis** , topic 4 is associated with **data visuals**       
@@ -1556,6 +1631,8 @@ top_terms %>%
   facet_wrap(~ topic, ncol = 4, scales = "free")
 
 ```
-                                         
+
+
+                     
 
                                                      
