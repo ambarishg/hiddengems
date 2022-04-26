@@ -268,6 +268,26 @@ drawNetworkGraph("Ramshankar Yadhunath")
 
 ```
 
+
+## Laura Fink - Leading Hidden Gem Author reviews     
+
+```{r,message=FALSE,warning=FALSE}
+
+ a = gems %>% 
+  filter(author_name == "Laura Fink") %>%
+  select(title,review)
+
+ a %>%
+  gt() %>%
+  tab_header(
+    title = "Laura Fink Hidden Gems")
+
+drawNetworkGraph("Laura Fink",occur=1)
+
+
+```
+
+
 ## Vopani - Leading Hidden Gem Author reviews     
 
 3 different clusters of reviews. The cluster focused on read table, cudf , pandas . The other cluster focused on   hugging face , tensorflow . The third cluster on the 2019 , 2020 survey            
@@ -1177,6 +1197,13 @@ a = s %>%
     select(notebook,review) %>%
     unnest_tokens(word, review) %>% 
     anti_join(stop_words)
+  
+  gem_review %>%
+  count(word,sort = TRUE) %>%
+  ungroup()  %>%
+  head(30) %>%
+  
+  with(wordcloud(word, n, max.words = 30,colors=brewer.pal(8, "Dark2")))
   
   
   review_word_pairs <- gem_review %>% 
