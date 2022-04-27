@@ -98,6 +98,13 @@ Police Policy and the Use of Deadly Force, CTDS - Subtitles exploration,	MOA Rec
 
 * Highest Upvotes after Hidden Gem declaration is **1152**   
 
+<hr/>
+
+**Similar Authors**     
+<hr/>
+
+We find similar authors using the Hidden Gems reviews. We use the TF-IDF technique as well as the cosine similarity to find similar authors. Below is the list of similar authors along with a Cosine Similarity Score. Higher the score , better is the similarity           
+
 
 
 ```{r,message=FALSE,warning=FALSE}
@@ -1728,5 +1735,106 @@ top_terms %>%
 ```
 
 
+# Similar Authors
 
-                                                     
+We find similar authors using the Hidden Gems reviews. We use the TF-IDF technique as well as the cosine similarity to find similar authors. Below is the list of similar authors along with a Cosine Similarity Score. Higher the score , better is the similarity
+
+## Jonathan Bouchet - *Similar Author* 
+
+```{r,message=FALSE,warning=FALSE}
+
+trainWords <- gems_users %>%
+  unnest_tokens(word, review) %>%
+  filter(!word %in% stop_words$word) %>%
+  count(DisplayName, word, sort = TRUE) %>%
+  ungroup()
+
+total_words <- trainWords %>% 
+  group_by(DisplayName) %>% 
+  summarize(total = sum(n))
+
+trainWords <- left_join(trainWords, total_words)
+
+#Now we are ready to use the bind_tf_idf which computes the tf-idf for each term. 
+trainWords <- trainWords %>%
+  filter(!is.na(DisplayName)) %>%
+  bind_tf_idf(word, DisplayName, n)
+
+   
+plot_trainWords <- trainWords %>%
+  arrange(desc(tf_idf)) %>%
+  mutate(word = factor(word, levels = rev(unique(word))))
+
+
+plot_trainWords_dtm <- plot_trainWords %>%
+  cast_dtm(DisplayName, word, n)
+
+cos_sim = function(matrix){
+  numerator = matrix %*% t(matrix)
+  A = sqrt(apply(matrix^2, 1, sum))
+  denumerator = A %*% t(A)
+  return(numerator / denumerator)
+}
+
+Sim = cos_sim(as.matrix(plot_trainWords_dtm))
+
+df_sim <- as.data.frame(Sim)
+
+df_sim$DisplayName <- rownames(df_sim)
+
+get_sim_authors <- function(x)
+{
+  
+  x <- df_sim %>%
+    filter(DisplayName == x)
+  
+  x_transpose <- as.data.frame(t(as.matrix(x)))
+  x_transpose$DisplayName <-rownames(x_transpose)
+  colnames(x_transpose) <- c("SimScore","Author")
+  x_transpose <- x_transpose %>%
+    arrange(desc(SimScore))
+  
+  x_transpose <- x_transpose[-1,]
+  x_transpose <- x_transpose[-1,]  
+  
+  return(x_transpose)
+  
+}
+
+get_sim_authors("Jonathan Bouchet") %>%
+  head() %>%
+  gt() %>%
+  tab_header(
+    title = "Authors similiar to Jonathan Bouchet")
+
+
+
+```
+
+## Vopani - *Similar Author* 
+
+```{r,message=FALSE,warning=FALSE}
+
+get_sim_authors("Vopani") %>%
+  head() %>%
+  gt() %>%
+  tab_header(
+    title = "Authors similiar to Vopani")
+
+
+
+```
+
+## Bukun - *Similar Author* 
+
+```{r,message=FALSE,warning=FALSE}
+
+get_sim_authors("Bukun") %>%
+  head() %>%
+  gt() %>%
+  tab_header(
+    title = "Authors similiar to Bukun")
+
+
+
+```
