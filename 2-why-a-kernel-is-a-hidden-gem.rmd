@@ -24,7 +24,17 @@ The NOTEBOOK Why a Kernel is a Hidden Gem cannot be updated in Kaggle because of
 **Heads or Tails** has compiled a list of 300 kernels for a period of 100 weeks which he believes are **Hidden Gems** , Kernels which are Gems but they did not get their due recognition. Thanks to the wonderful effort, Heads or Tails for the Kaggle Community.                          
 
 
-We wanted  to find out what makes a Kernel a **Hidden Gem**. We looked at the **8** perspectives : Most Popular Gem Authors , Performance Tier of the Gem Authors , Total Votes , Total Comments , Total Views , Medals for the Gems , Maximum Version of the Kernel, Whether the Notebook is a Competition Notebook or not            
+We wanted  to find out what makes a Kernel a **Hidden Gem**. For this we looked at 2 perspectives   
+
+* **8 perspectives**         
+
+* **Text Mining the Hidden Gem Titles and Hidden Gem Reviews**  
+
+<hr/>
+**8 perspectives**                 
+<hr/>
+
+We looked at the **8** perspectives : Most Popular Gem Authors , Performance Tier of the Gem Authors , Total Votes , Total Comments , Total Views , Medals for the Gems , Maximum Version of the Kernel, Whether the Notebook is a Competition Notebook or not            
 
 
 We then did a Dimension Reduction of the Hidden Gems  to see which of the factors contribute the most in making a Kernel in the Hidden Gem. We found that the  **Total Votes , Total Comments , Total Views and Medal** contributes the most . The other factors which influenced a lot are **Whether the Notebook is a Competition Notebook or Not** and **Maximum Version Number ** of the Notebook    
@@ -61,7 +71,7 @@ We also found that Hidden Gem Reviews with **2 most commonly occurring words** i
 We also wanted to find out topics which are interesting for Hidden Gems. Most prominent topics include  **detailed exploration** ,  **competition** ,  **data analysis** , and  **data visuals**          
 
 <span style="background:#fed56f; font-weight:bold; color:black">
-Mining the Hidden Gem Titles and Reviews it seems that notebooks with **detailed exploratory data analysis catches the eye of the Hidden Gem Creator**
+Mining the Hidden Gem Titles and Reviews it seems that notebooks with **detailed exploratory data analysis catches the eye of the Hidden Gem Series Creator**
 </span>
 
 We also dived deeper into the leading Hidden Gem Authors' [ Jonathan Bouchet and Ramshankar Yadunath ] reviews and found the notebooks are detailed and have beautiful visuals and exploratory data analysis    
@@ -69,6 +79,9 @@ We also dived deeper into the leading Hidden Gem Authors' [ Jonathan Bouchet and
 
 We also saw another genre of reviews of Vopani, kxx and Bojan Tunguz and saw these reviews appreciated the various techniques <span style="background:blue; color:white">using structured datasets in competitions. It also focussed on model building using Keras as well as XGBoost [Bojan's reviews]
 </span>
+
+This genre coincides with the observations of Grandmaster reviews which concentrates on competition solutions. The reviews mention of clean code, clean techniques , clean analysis.
+
 
 <hr/ >
 
@@ -1571,18 +1584,100 @@ gems_image = gems %>%
 ```
 
 
+## GrandMaster and Reviews         
+
+GrandMaster Reviews concentrate on competition solutions. The reviews mention of clean code, clean techniques , clean analysis.      
+
+```{r,message=FALSE,warning=FALSE}
 
 
+performanceTierNetworkGraph <- function(tierName,occur = 3) {
+  gem_review_gm <- gems_users %>% 
+    select(notebook,review,PerformanceTier) %>%
+    filter(PerformanceTier ==  tierName)  %>%
+    unnest_tokens(word, review) %>% 
+    anti_join(stop_words) 
+  
+  gem_review_gm %>%
+    count(word,sort = TRUE) %>%
+    ungroup()  %>%
+    head(30) %>%
+    
+    with(wordcloud(word, n, max.words = 30,colors=brewer.pal(8, "Dark2")))
+  
+  review_word_pairs <- gem_review_gm %>% 
+    pairwise_count(word, notebook, sort = TRUE, upper = FALSE) %>%
+    filter( item1 != "www.kaggle.com") %>%
+    filter( item2 != "www.kaggle.com") %>%
+    filter( item1 != "https")
+  
+  
+  set.seed(1234)
+  review_word_pairs %>%
+    filter( n >= occur) %>%
+    graph_from_data_frame() %>%
+    ggraph(layout = "fr") +
+    geom_edge_link(aes(edge_alpha = n, edge_width = n), edge_colour = "darkred") +
+    geom_node_point(size = 5) +
+    geom_node_text(aes(label = name), repel = TRUE,
+                   point.padding = unit(0.2, "lines")) +
+    theme_void()
+}
+
+performanceTierNetworkGraph(4)
+
+```
+
+### Grand Master reviews        
+
+```{r,message=FALSE,warning=FALSE}
+
+gem_review_gm = gems_users %>%
+  filter(PerformanceTier == 4)%>%
+  select(title,review)
+
+  gem_review_gm %>%
+  gt() %>%
+  tab_header(
+    title = "Grand Master reviews")
+
+```
+
+## Kaggle Network Graph      
+
+Kaggle Reviews concentrate on lessons teaching a particular technique based on technologies such as TensorFlow       
 
 
+```{r,message=FALSE,warning=FALSE}
+
+performanceTierNetworkGraph(5,occur = 2)
+
+```
+
+### Kaggle reviews        
+
+```{r,message=FALSE,warning=FALSE}
+
+gem_review_gm = gems_users %>%
+  filter(PerformanceTier == 5)%>%
+  select(title,review)
+
+  gem_review_gm %>%
+  gt() %>%
+  tab_header(
+    title = "Kaggle reviews")
+
+```
+## Master Network Graph      
+
+Master reviews concentrate on detailed analysis , detailed visuals , detailed narration   
 
 
+```{r,message=FALSE,warning=FALSE}
 
+performanceTierNetworkGraph(3,occur = 4)
 
-
-
-
-
+```
 
 
 ## Topic Modelling of Hidden Gem Reviews             
@@ -1633,6 +1728,5 @@ top_terms %>%
 ```
 
 
-                     
 
                                                      
