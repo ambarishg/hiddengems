@@ -108,6 +108,12 @@ We find similar authors using the Hidden Gems reviews. We use the TF-IDF techniq
 
 
 ```{r,message=FALSE,warning=FALSE}
+
+options(warn = -1)
+options(scipen = 10000)
+options(repr.plot.width = 20.0, repr.plot.height = 13.3)
+
+
 library(gt)
 library(stringr)
 library(knitr)
@@ -120,6 +126,9 @@ library(igraph)
 library(ggraph)
 library(tidytext)
 library('wordcloud')
+library(ggthemes)
+
+
 
 ```
 
@@ -162,6 +171,34 @@ kvcs <- kernels_gems %>%
 kernels_gems_tags <- inner_join(kernels_gems,kernel_tags)
 kernels_gems_tags <- inner_join(kernels_gems_tags,tags,by = c("TagId" = "Id"))
 
+
+trainWords <- gems_users %>%
+  unnest_tokens(word, review) %>%
+  filter(!word %in% stop_words$word) %>%
+  count(DisplayName, word, sort = TRUE) %>%
+  ungroup()
+
+total_words <- trainWords %>% 
+  group_by(DisplayName) %>% 
+  summarize(total = sum(n))
+
+trainWords <- left_join(trainWords, total_words)
+
+#Now we are ready to use the bind_tf_idf which computes the tf-idf for each term. 
+trainWords <- trainWords %>%
+  filter(!is.na(DisplayName)) %>%
+  bind_tf_idf(word, DisplayName, n)
+
+   
+tfidf_trainWords <- trainWords %>%
+  arrange(desc(tf_idf)) %>%
+  mutate(word = factor(word, levels = rev(unique(word))))
+
+
+tfidf_trainWords_dtm <- tfidf_trainWords %>%
+  cast_dtm(DisplayName, word, n)
+
+
 ```
   
 
@@ -190,7 +227,7 @@ gems %>%
        y = 'Count', 
        title = 'author and Count') +
   coord_flip() + 
-  theme_bw(base_size = 15)
+  theme_fivethirtyeight(base_size = 15)
 ```
 
 ## Jonathan Bouchet Notebooks -  Top Hidden Gem Author
@@ -199,7 +236,7 @@ gems %>%
 
 jb_gems = gems %>%
  filter(author_name == "Jonathan Bouchet") %>%
-  select(notebook,review)
+  select(title,review)
 
 
 
@@ -211,11 +248,15 @@ jb_gems %>%
 ```
 
 
+
+
 <hr/>
 
 For each of the authors we show a **word cloud** as well as a **network graph**         
 
 A word cloud is a graphical representation of frequently used words in the text. The height of each word in this picture is an indication of frequency of occurrence of the word in the entire text.    
+
+We wish to find out the important words in the Hidden Gem reviews. Example for your young child , the most important word is mom. Example for a bar tender , important words would be related to drinks. For the following Hidden Gem Authors, we plot the most important or distinguishing words    
 
 <hr/>
 ## Jonathan Bouchet - Leading Hidden Gem Author reviews     
@@ -276,6 +317,31 @@ drawNetworkGraph("Jonathan Bouchet")
 
 ```
 
+
+```{r,message=FALSE,warning=FALSE}
+
+getImportantWords <- function(author) {
+  tfidf_trainWords %>%
+    filter(DisplayName == author) %>%
+    arrange(desc(tf_idf)) %>%
+    mutate(word = reorder(word,tf_idf)) %>%
+    head() %>%
+  
+  ggplot(aes(x = word,y = tf_idf)) +
+    geom_bar(stat='identity',colour="white", fill = "orange")+
+    labs(x = 'word', 
+         y = 'tf-idf', 
+         title = 'Most Important words') +
+    coord_flip() + 
+    theme_fivethirtyeight(base_size = 15) +
+    theme(legend.position = "none") 
+}
+
+getImportantWords("Jonathan Bouchet")
+
+```
+
+
 ## Ramshankar Yadhunath - Leading Hidden Gem Author reviews     
 
 The reviews reveal that these notebooks have visual analysis and visual interpretations              
@@ -285,8 +351,33 @@ The reviews reveal that these notebooks have visual analysis and visual interpre
 
 drawNetworkGraph("Ramshankar Yadhunath")
 
+getImportantWords("Ramshankar Yadhunath")
+
 ```
 
+
+## Parul Pandey - Leading Hidden Gem Author reviews     
+
+The reviews indicate strong association with **covid 19** topics. This is expected since the Hidden Gem Notebooks are about Pollution and the Indian Stock Index Nifty of how they were affected by COVID 19       
+
+
+
+```{r,message=FALSE,warning=FALSE}
+
+ a = gems %>% 
+  filter(author_name == "Parul Pandey") %>%
+  select(title,review)
+
+ a %>%
+  gt() %>%
+  tab_header(
+    title = "Parul Pandey Hidden Gems")
+
+drawNetworkGraph("Parul Pandey",occur = 1)
+
+getImportantWords("Parul Pandey")
+
+```
 
 ## Laura Fink - Leading Hidden Gem Author reviews  
 
@@ -306,6 +397,7 @@ Laura Fink reviews have words mentioning **detailed visuals**  and **detailed in
 
 drawNetworkGraph("Laura Fink",occur=1)
 
+getImportantWords("Laura Fink")
 
 ```
 
@@ -328,6 +420,7 @@ drawNetworkGraph("Laura Fink",occur=1)
 
 drawNetworkGraph("Vopani",occur=1)
 
+getImportantWords("Vopani")
 
 ```
 
@@ -352,7 +445,7 @@ drawNetworkGraph("Vopani",occur=1)
 
 drawNetworkGraph("kxx",occur=1)
 
-
+getImportantWords("kxx")
 ```
 
 
@@ -374,6 +467,8 @@ Reviews strongly indicate the words **gpu** , **rapids**, **xgboost**
     title = "Bojan Tunguz Hidden Gems")
 
 drawNetworkGraph("Bojan Tunguz",occur=1)
+
+getImportantWords("Bojan Tunguz")
 
 
 ```
@@ -409,7 +504,7 @@ p1 %>%
        title = 'Tags and Percentage') +
   guides(fill=guide_legend(title="Tags Percentage")) +
   coord_flip() + 
-  theme_bw(base_size = 15) +
+  theme_fivethirtyeight(base_size = 15) +
   theme(legend.position = "none") 
 
 ```
@@ -444,7 +539,7 @@ getTagsAuthor <- function(author) {
          title = 'Tags and Percentage') +
     guides(fill=guide_legend(title="Tags Percentage")) +
     coord_flip() + 
-    theme_bw(base_size = 15) +
+    theme_fivethirtyeight(base_size = 15) +
     theme(legend.position = "none") 
 }
 
@@ -510,7 +605,7 @@ p1 %>%
        y = 'Percentage', 
        title = 'Performance Tier and Percentage') +
   coord_flip() + 
-  theme_bw(base_size = 15) +
+  theme_fivethirtyeight(base_size = 15) +
   theme(legend.position = "none") 
 
 
@@ -549,7 +644,7 @@ comp_notebooks_colors <- c("NotCompetitionNotebook" = fillColor,
   labs(x = 'Notebook Type', 
        y = 'Percentage', 
        title = 'Notebook Type and Percentage') +
-  theme_bw() +
+  theme_fivethirtyeight() +
   theme(legend.position = "none") 
 
 ```
@@ -588,7 +683,7 @@ kvcs %>%
       ggplot(aes(x = TotalVotes, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
-      theme_bw() +
+      theme_fivethirtyeight() +
   theme(legend.position = "none") 
                                                      
 
@@ -605,7 +700,7 @@ kvcs %>%
       ggplot(aes(x = TotalVotes, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
-      theme_bw() +
+      theme_fivethirtyeight() +
   theme(legend.position = "none") 
                                                      
 
@@ -620,8 +715,9 @@ kvcs %>%
   filter(!is.na(TotalVotes)) %>%
       ggplot(aes(x = TotalVotes, fill = fillColor2)) +
       geom_density(fill = "orange", bw = 0.01) +
-      labs(x= ' [Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
-      theme_bw() +
+      scale_x_log10() +
+      labs(x= ' [Log Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
+      theme_fivethirtyeight() +
   theme(legend.position = "none") 
                                                      
 
@@ -671,7 +767,7 @@ kvcs %>%
       ggplot(aes(x = TotalComments, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [Total Votes]',y = ' [Count]', title = paste("Distribution of", ' Total Votes ')) +
-      theme_bw(base_size = 15) +
+      theme_fivethirtyeight(base_size = 15) +
   theme(legend.position = "none") 
                                                      
 
@@ -686,9 +782,10 @@ kvcs %>%
   filter(!is.na(TotalComments)) %>%
       ggplot(aes(x = TotalComments)) +
       geom_density(fill = "orange", bw = 0.01) +
-      labs(x= ' [TotalComments]',y = ' [Count]', title = paste("Distribution of", ' Total Comments ')) +
+      scale_x_log10() +
+      labs(x= ' [Log TotalComments]',y = ' [Count]', title = paste("Distribution of", ' Total Comments ')) +
   guides(fill=guide_legend(title="Total Comments Distribution")) +
-      theme_bw(base_size = 15)
+      theme_fivethirtyeight(base_size = 15)
 
 ```
 
@@ -739,7 +836,7 @@ kvcs %>%
       ggplot(aes(x = TotalViews, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [Total TotalViews]',y = ' [Count]', title = paste("Distribution of", ' Total TotalViews ')) +
-      theme_bw(base_size = 15) +
+      theme_fivethirtyeight(base_size = 15) +
   theme(legend.position = "none") 
                                                      
 
@@ -756,7 +853,7 @@ kvcs %>%
       geom_density(fill = "orange", bw = 0.01) +
       labs(x= ' [TotalViews]',y = ' [Count]', title = paste("Distribution of", ' Total TotalViews ')) +
   guides(fill=guide_legend(title="Total TotalViews Distribution")) +
-      theme_bw()
+      theme_fivethirtyeight()
 
 ```
 
@@ -772,7 +869,7 @@ kvcs %>%
       scale_y_log10() + 
       labs(x= 'Log [TotalViews]',y = 'Log [Count]', title = paste("Distribution of", ' Total Views ')) +
   guides(fill=guide_legend(title="Total Views Distribution")) +
-      theme_bw(base_size = 15)
+      theme_fivethirtyeight(base_size = 15)
 
 ```
 
@@ -847,7 +944,7 @@ p1 <- kvcs %>%
        title = 'Medal and Percentage') +
   coord_flip() + 
   guides(fill=guide_legend(title="Medal Distribution")) +
-  theme_bw(base_size = 15)
+  theme_fivethirtyeight(base_size = 15)
 
 
 ```
@@ -895,7 +992,7 @@ kvcs_versions_info %>%
       ggplot(aes(x = MaxVersionNumber, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [MaxVersionNumber]',y = ' [Count]', title = paste("Distribution of", ' MaxVersionNumber ')) +
-      theme_bw() +
+      theme_fivethirtyeight() +
   theme(legend.position = "none") 
                                                      
 
@@ -912,7 +1009,7 @@ kvcs_versions_info %>%
       geom_density(fill = "orange", bw = 0.01) +
       labs(x= ' [MaxVersionNumber]',y = ' [Count]', title = paste("Distribution of", ' MaxVersionNumber ')) +
   guides(fill=guide_legend(title="MaxVersionNumber Distribution")) +
-      theme_bw()
+      theme_fivethirtyeight()
 
 ```
 
@@ -928,7 +1025,7 @@ kvcs_versions_info %>%
       ggplot(aes(x = MaxVersionNumber, fill = fillColor2)) +
       geom_histogram() +
       labs(x= 'Maximum Version Number',y = 'Count', title = paste("Distribution of", ' Maximum Version Number ')) +
-      theme_bw()
+      theme_fivethirtyeight()
 
 
 ```
@@ -1020,8 +1117,9 @@ showPC <- function(PCNumber) {
          y = 'Value', 
          title = 'Column and Value') +
     coord_flip() + 
-    guides(fill=guide_legend(title="Principal Components")) +
-    theme_bw()
+    theme_fivethirtyeight() +
+  theme(legend.position = "none") 
+                                  
 }
 
 showPC(1)
@@ -1196,9 +1294,9 @@ kernel_gems_votes %>%
             fontface = 'bold') +
   labs(x = 'Notebook', 
        y = 'Count', 
-       title = 'Notebook and Count') +
+       title = 'Highest UpVotes') +
   coord_flip() + 
-  theme_bw(base_size = 15)
+  theme_fivethirtyeight(base_size = 15)
   
   
   s = 
@@ -1303,9 +1401,9 @@ The notebooks which got the lowest votes after the Hidden Gem declaration are sh
             fontface = 'bold') +
   labs(x = 'CurrentUrlSlug', 
        y = 'Count', 
-       title = 'CurrentUrlSlug and Count') +
+       title = 'Lowest UpVotes') +
   coord_flip() + 
-  theme_bw()
+  theme_fivethirtyeight()
  
   a = s %>%
   arrange((Count)) %>%
@@ -1336,7 +1434,7 @@ s %>%
       ggplot(aes(x = Count, fill = fillColor2)) +
       geom_boxplot() + 
       labs(x= ' [UpVotes]',y = ' [Count]', title = paste("Distribution of", ' UpVotes ')) +
-      theme_bw() +
+      theme_fivethirtyeight() +
   theme(legend.position = "none") 
                                                      
 
@@ -1352,7 +1450,7 @@ s %>%
       ggplot(aes(x = Count, fill = fillColor2)) +
       geom_density(fill = "orange", bw = 0.01) +
       labs(x= ' [Up Votes]',y = ' [Count]', title = paste("Distribution of", ' Up Votes ')) +
-      theme_bw() +
+      theme_fivethirtyeight() +
   theme(legend.position = "none") 
                                                      
 
@@ -1743,31 +1841,6 @@ We find similar authors using the Hidden Gems reviews. We use the TF-IDF techniq
 
 ```{r,message=FALSE,warning=FALSE}
 
-trainWords <- gems_users %>%
-  unnest_tokens(word, review) %>%
-  filter(!word %in% stop_words$word) %>%
-  count(DisplayName, word, sort = TRUE) %>%
-  ungroup()
-
-total_words <- trainWords %>% 
-  group_by(DisplayName) %>% 
-  summarize(total = sum(n))
-
-trainWords <- left_join(trainWords, total_words)
-
-#Now we are ready to use the bind_tf_idf which computes the tf-idf for each term. 
-trainWords <- trainWords %>%
-  filter(!is.na(DisplayName)) %>%
-  bind_tf_idf(word, DisplayName, n)
-
-   
-plot_trainWords <- trainWords %>%
-  arrange(desc(tf_idf)) %>%
-  mutate(word = factor(word, levels = rev(unique(word))))
-
-
-plot_trainWords_dtm <- plot_trainWords %>%
-  cast_dtm(DisplayName, word, n)
 
 cos_sim = function(matrix){
   numerator = matrix %*% t(matrix)
@@ -1776,7 +1849,7 @@ cos_sim = function(matrix){
   return(numerator / denumerator)
 }
 
-Sim = cos_sim(as.matrix(plot_trainWords_dtm))
+Sim = cos_sim(as.matrix(tfidf_trainWords_dtm))
 
 df_sim <- as.data.frame(Sim)
 
@@ -1825,7 +1898,52 @@ get_sim_authors("Vopani") %>%
 
 ```
 
+## Parul Pandey - *Similar Author* 
+
+```{r,message=FALSE,warning=FALSE}
+
+get_sim_authors("Parul Pandey") %>%
+  head() %>%
+  gt() %>%
+  tab_header(
+    title = "Authors similiar to Parul Pandey")
+
+
+
+```
+
+
+## Bojan Tunguz - *Similar Author* 
+
+```{r,message=FALSE,warning=FALSE}
+
+get_sim_authors("Bojan Tunguz") %>%
+  head() %>%
+  gt() %>%
+  tab_header(
+    title = "Authors similiar to Bojan Tunguz")
+
+
+
+```
+
+## Laura Fink - *Similar Author* 
+
+```{r,message=FALSE,warning=FALSE}
+
+get_sim_authors("Laura Fink") %>%
+  head() %>%
+  gt() %>%
+  tab_header(
+    title = "Authors similiar to Laura Fink")
+
+
+
+```
+
+
 ## Bukun - *Similar Author* 
+
 
 ```{r,message=FALSE,warning=FALSE}
 
